@@ -1,0 +1,57 @@
+{
+  "name": "mimic",
+  "version": "0.0.1",
+  "description": "Large data collection file synchronization tool.",
+  "main": "index.js",
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "mimic-add": "./src/add.js",
+    "mimic-clone": "./src/clone.js",
+    "mimic-config": "./src/config.js",
+    "mimic-download": "./src/download.js",
+    "mimic-info": "./src/info.js",
+    "mimic-init": "./src/init.js",
+    "mimic-prune": "./src/prune.js",
+    "mimic-pull": "./src/pull.js",
+    "mimic-refresh": "./src/refresh.js",
+    "mimic-status": "./src/status.js",
+    "mimic-tree": "./src/tree.js"
+  },
+  "author": "Todd King <tking@igpp.ucla.edu>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "grunt": "^0.4.5"
+  },
+  "dependencies": {
+    "@ronomon/utimes": "^2.2.0",
+    "comma-number": "^2.0.0",
+    "convert-units": "^2.3.4",
+    "ftp": "^0.3.10",
+    "n-readlines": "^0.2.8",
+    "scp2": "^0.5.0",
+    "walk-folder-tree": "^1.0.1",
+    "yargs": "^11.0.0"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [
+    "mimic",
+    "share",
+    "big",
+    "data"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/igpp/mimic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/igpp/mimic/issues"
+  },
+  "homepage": "https://github.com/igpp/mimic#readme"
+}
