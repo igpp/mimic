@@ -144,6 +144,7 @@ var main = function(args)
 	
 	if( ! info[direction] ) { info[direction] = {}; }
 	
+	if( options.tag ) {  info[direction]['tag'] = options.tag;  }
 	if( options.username ) {  info[direction]['username'] = options.username;  }
 	if( options.uri ) { info[direction]['URI'] = options.uri;  }
 	if( options.cipher ) { info[direction]['withCipher'] = options.cipher;  }

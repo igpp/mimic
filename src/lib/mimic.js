@@ -36,12 +36,30 @@ module.exports = {
 	init : function(pathname) {
 		var mimicPath = path.normalize(path.join(pathname, config.MimicFolder))
 		
+		// Create destination folder - if it doesn't exist
+		if( pathname != path.normalize(path.basename(pathname))) {
+			console.log("Destination must a folder name and cannot include a path.");
+			return;
+		}
+		
+		if( ! fs.existsSync(pathname)) {
+			fs.mkdirSync(pathname);
+		}
+		
 		// Create hidden ".mimic" folder if one does not exist.
 		if( ! fs.existsSync(mimicPath)) {
 			fs.mkdirSync(mimicPath);
 		} else {
 			console.log('Folder already initialized for use with mimic.');
 			return false;
+		}
+
+		var checksumPath = path.normalize(path.join(pathname, config.ChecksumFile))
+		
+		// Create empty checksum file.
+		if( ! fs.existsSync(checksumPath)) {
+			var fd = fs.openSync(checksumPath, "w");
+			if(fd != -1) fs.closeSync(fd);
 		}
 		
 		return true;

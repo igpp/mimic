@@ -8,12 +8,10 @@
  * @author Todd King
  *
  */
-const fs = require('fs');
 const yargs = require('yargs');
-const path = require('path');
 
 // Mimic modules
-const config = require('./lib/config.js')
+const mimic = require('./lib/mimic.js');
 
 // Configure the app
 var options  = yargs
@@ -48,6 +46,7 @@ var args = options._;	// None option command line arguments
 
 // Global variables
 
+/*
 function init(pathname) {
 	if(options.verbose) {
 		console.log("__dirname: " + __dirname);
@@ -71,6 +70,7 @@ function init(pathname) {
 		if(fd != -1) fs.closeSync(fd);
 	}	
 }
+*/
 
 var main = function(args)
 {
@@ -80,7 +80,7 @@ var main = function(args)
 	  return;
 	}
 
-	init(args[0]);
+	mimic.init(args[0]);
 }
 
 main(args);	
