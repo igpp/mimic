@@ -28,7 +28,7 @@ mimic-add -v -r .
 
 Updating a Mimic collection (refresh)
 ```shell
-mimic-refresh -v -r .
+mimic-refresh -v .
 ```
 
 **Sharing a Mimic collection**
