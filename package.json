@@ -1,5 +1,5 @@
 {
-  "name": "mimic",
+  "name": "igpp-mimic",
   "version": "0.0.1",
   "description": "File collection transfer and synchronization tools.",
   "main": "index.js",
