@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+"use strict";
 /**
  * Add new files, remove missing files and update entries for changed files in the Mimic managed collection.
  * 

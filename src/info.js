@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+"use strict";
 /**
  * Display information about a Mimic managed collection.
  * 

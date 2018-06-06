@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+"use strict";
 /**
  * Prune (remove) enties from a Mimic managed collection that begin with a given path.
  * 

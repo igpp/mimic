@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+"use strict";
 /**
  * Add new files to the Mimic managed collection.
  * 
