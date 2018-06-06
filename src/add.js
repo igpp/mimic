@@ -13,9 +13,9 @@ const mimic = require('./lib/mimic.js');
 // Configure the app
 var options  = yargs
 	.version('1.0.0')
-	.usage('Add new files to the Mimic managed collection.')
-	.usage('$0 [args] files')
-	.example('$0 example.txt', 'add "example.txt" to the mangaged files')
+	.usage('Add new files to the inventory of a Mimic managed collection.')
+	.usage('mimic-add [args] files')
+	.example('mimic-add example.txt', 'add "example.txt" to the mangaged files')
 	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')

@@ -490,6 +490,8 @@ module.exports = {
 	 */
 	refresh : function(filepath, quick, recurse, verbose, testMode) {
 		// Global Variables
+		var folderCnt = 0;
+		var fileCnt = 0;
 		var addFolderCnt = 0;
 		var addFileCnt = 0;
 		var removeFolderCnt = 0;
@@ -523,10 +525,13 @@ module.exports = {
 				var resourcePath = "./" + path.relative(root, path.join(filepath, params.path));	// Make relative to base
 				resourcePath = config.canonicalPath(resourcePath);
 				var resourceInfo = localMap[resourcePath];
+				
+				if(params.directory) { folderCnt++; } else { fileCnt++; }
+
 				if(typeof resourceInfo === 'undefined') {	// new - add to list
 					if(params.directory) {
 						addFolderCnt++;
-						if(verbose || test) console.log("     New: " + resourcePath);
+						if(verbose || testMode) console.log("     New: " + resourcePath);
 						if( ! testMode) {	// Do it
 							freshMap[resourcePath] = checksum.createChecksumRecord(0, params.stat.mtimeMs, checksum.DirDigest, resourcePath);
 						}
@@ -540,6 +545,7 @@ module.exports = {
 					}
 					changed = true;
 				} else {	// Existing - check profile
+					var ok = true;
 					var stat = fs.statSync(resourcePath);
 					var statMod = Math.floor(stat.mtimeMs); // stat.mtimeMs includes fractional ms
 					if(resourceInfo.modified != statMod || resourceInfo.length != stat.size) {
@@ -549,13 +555,13 @@ module.exports = {
 							updateFileCnt++;
 						}
 						if(verbose) {
-							console.log("   Update: " + resourcePath);
+							if(verbose || testMode) console.log("   Update: " + resourcePath);
 						}
-						if( ! testMode) { // Do it
+						if( ! testMode) { // Update info
 							resourceInfo.modified = stat.mtimeMs;
 							resourceInfo.length = stat.size;
 						}	
-						changed = true;						
+						changed = true;	ok = false;					
 					}
 					if( ! quick ) {	// Check checksum
 						if( ! params.directory) {	// Only do files
@@ -568,12 +574,13 @@ module.exports = {
 								if( ! testMode) { // Do it
 									resourceInfo.checksum = hash;
 								}
-								changed = true;
+								changed = true; ok = false;
 							}
 						}
 					}
-					if( ! testMode) { // Do it
-						freshMap[resourcePath] = resourceInfo;
+					freshMap[resourcePath] = resourceInfo;
+					if(verbose && ok && testMode == 2) { // Status reporting
+						console.log("       OK: " + resourcePath);
 					}
 				}			
 				cb();
@@ -582,18 +589,17 @@ module.exports = {
 				for(var i = 0; i < keys.length; i++) {
 					var resourcePath = keys[i];
 					if(typeof freshMap[resourcePath] === 'undefined') {	// removed
-						if(verbose) {
-							console.log("   Remove: " + resourcePath);
-						}
+						if(verbose || testMode) { console.log("   Remove: " + resourcePath); }
 						if( checksum.isDir(localMap[resourcePath].checksum) ) { removeFolderCnt++; }
 						else { removeFileCnt++; }
 						changed = true;
 					}
-				}	
+				}
 			}).then(function() {	// Finalize changes
 				if(changed && ! testMode) { checksum.store(filepath, checksum.sort(freshMap)); }
 				console.log("");
 				console.log("Summary");
+				console.log(" Scanned: " + folderCnt + " folder(s); " + fileCnt + " files(s)");
 				console.log("     Add: " + addFolderCnt + " folder(s); " + addFileCnt + " files(s)");
 				console.log("  Remove: " + removeFolderCnt + " folder(s); " + removeFileCnt + " files(s)");
 				console.log("  Update: " + updateFolderCnt + " folder(s); " + updateFileCnt + " files(s)");

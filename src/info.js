@@ -21,8 +21,8 @@ var mExclude = [config.MimicFolder];
 var options  = yargs
 	.version('1.0.0')
 	.usage('Display information about a Mimic managed collection.')
-	.usage('$0 [args]')
-	.example('$0 .', 'display Mimic information about the current folder.')
+	.usage('mimic-info [args]')
+	.example('mimic-info .', 'display Mimic information about the current folder.')
 	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')

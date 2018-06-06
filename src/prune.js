@@ -18,8 +18,8 @@ var mExclude = [config.MimicFolder];
 var options  = yargs
 	.version('1.0.0')
 	.usage('Prune (remove) enties from a Mimic managed collection that begin with a given path.')
-	.usage('$0 [args] path')
-	.example('$0 data/example', 'remove entries that begin with "data/example" from the list of mangaged files')
+	.usage('mimic-prune [args] path')
+	.example('mimic-prune data/example', 'remove entries that begin with "data/example" from the Mimic inventory')
 	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')

@@ -16,9 +16,9 @@ const config = require('./lib/config.js');
 // Configure the app
 var options  = yargs
 	.version('1.0.0')
-	.usage('Tool to configure synchronization with remote hosts.')
-	.usage('$0 [args] <files...>')
-	.example('$0 -l .', 'list configuration in the current folder')
+	.usage('Configure synchronization with Mimic collections on a remote hosts.')
+	.usage('mimic-config [args] <files...>')
+	.example('mimic-config -l .', 'list configuration in the current folder')
 	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')

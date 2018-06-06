@@ -1,7 +1,7 @@
 {
   "name": "mimic",
   "version": "0.0.1",
-  "description": "Large data collection file synchronization tool.",
+  "description": "File collection transfer and synchronization tools.",
   "main": "index.js",
   "engines": {
     "node": ">=8.0.0"

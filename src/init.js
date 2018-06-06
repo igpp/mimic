@@ -10,14 +10,17 @@
  */
 const fs = require('fs');
 const yargs = require('yargs');
+const path = require('path');
+
+// Mimic modules
 const config = require('./lib/config.js')
 
 // Configure the app
 var options  = yargs
 	.version('1.0.0')
 	.usage('Initialize a Mimic managed collection.')
-	.usage('$0 [args]')
-	.example('$0', 'initialize the current folder')
+	.usage('mimic-init [args]')
+	.example('mimic-init .', 'initialize the current folder')
 	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')

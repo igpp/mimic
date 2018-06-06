@@ -13,8 +13,8 @@ const mimic = require('./lib/mimic.js');
 var options  = yargs
 	.version('1.0.0')
 	.usage('Check the status of Mimic managed collection.')
-	.usage('$0 [args] files')
-	.example('$0 .', 'check the inventory of mangaged files in the current (.) folder.')
+	.usage('mimic-status [args] files')
+	.example('mimic-status .', 'check the inventory of mangaged files in the current (.) folder.')
 	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')

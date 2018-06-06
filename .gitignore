@@ -57,3 +57,10 @@ typings/
 # dotenv environment variables file
 .env
 
+# Test areas
+test/add-test
+test/clone-test
+test/download-test
+test/prune-test
+test/pull-test
+test/refresh-test

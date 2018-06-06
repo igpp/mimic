@@ -17,9 +17,9 @@ const checksum = require('./lib/checksum.js');
 // Configure the app
 var options  = yargs
 	.version('1.0.0')
-	.usage('Download files using Mimic technology.')
-	.usage('$0 [args] <files...>')
-	.example('$0 -i somehwere -u me .', 'create a copy of the collection at "somewhere" as user "me"')
+	.usage('Download files listing in an inventory (package) using Mimic.')
+	.usage('mimic-download [args] <files...>')
+	.example('mimic-download -p pack.mimic .', 'download the files listed in "pack.mimic"')
 	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
@@ -61,7 +61,6 @@ var options  = yargs
 		},
 				
 	})
-	.demandOption(['p'])
 	.argv
 	;
 
@@ -74,7 +73,12 @@ var main = function(args)
 	  yargs.showHelp();
 	  return;
 	}
+	
+	var good = true;
+	if( ! options.pack ) { console.log("Missing package (-p) name. Required."); good = false; }
 
+	if( ! good ) return;
+	
 	// Read package
 	if( ! fs.existsSync(options.pack)) { 
 		console.log('Package file does not exist.');

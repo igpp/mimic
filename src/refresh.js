@@ -14,8 +14,8 @@ const mimic = require('./lib/mimic.js');
 var options  = yargs
 	.version('1.0.0')
 	.usage('Add new files, remove missing files and update entries for changed files in the Mimic managed collection.')
-	.usage('$0 [args] files')
-	.example('$0 .', 'update the inventory of mangaged files in the current (.) folder.')
+	.usage('mimic-refresh [args] files')
+	.example('mimic-refresh .', 'update the inventory for the collection that includes the current (.) folder.')
 	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
@@ -35,14 +35,6 @@ var options  = yargs
 			type: 'boolean',
 			default: false
 		},
-
-		// Recursively scan for files
-		'r' : {
-			alias: 'recurse',
-			describe : 'Recursively process all files starting at path.',
-			type: 'boolean',
-			default: false
-		},
 		
 		// Test run
 		't' : {
@@ -56,14 +48,6 @@ var options  = yargs
 		'q' : {
 			alias: 'quick',
 			describe : 'Check file presence, size and timestamp only. Do not recalculate checksum.',
-			type: 'boolean',
-			default: false
-		},
-
-		// File
-		'f' : {
-			alias: 'file',
-			describe : 'Refresh the entry for the given file. Path is relative to the root Mimic folder.',
 			type: 'boolean',
 			default: false
 		},
@@ -92,7 +76,7 @@ var main = function(args)
 	// Process source argument 
 	while((arg = args.shift()) != null) {
 		if(options.verbose) { console.log("Refreshing files in: " + arg); }
-		mimic.refresh(arg, options.quick, options.recurse, options.verbose, options.test);
+		mimic.refresh(arg, options.quick, true, options.verbose, options.test);
 	}
 	
 }

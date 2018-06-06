@@ -18,8 +18,8 @@ const walk = require('walk-folder-tree');
 var options  = yargs
 	.version('1.0.2')
 	.usage('List the file tree. Optionally list only files with a given extension.')
-	.usage('$0 [args] <files...>')
-	.example('$0 -r .', 'list the file tree starting at the current folder.')
+	.usage('mimic-tree [args] <files...>')
+	.example('mimic-tree -r .', 'list the file tree starting at the current folder.')
 	.epilog("Development funded by NASA's VMO project at UCLA.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')

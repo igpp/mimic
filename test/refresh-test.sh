@@ -24,7 +24,7 @@ echo "5372,1328577692000,12d4cee083d11530d61b467183ebd7cd0a1131a5,./BOGUS/ERRATA
 
 # Add missing files to inventory 
 echo ""
-echo "Doing prune..."
+echo "Doing refresh..."
 
 node ../../src/refresh.js -v -r .
 

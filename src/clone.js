@@ -16,9 +16,9 @@ const mimic = require('./lib/mimic.js');
 // Configure the app
 var options  = yargs
 	.version('1.0.0')
-	.usage('Clone (copy) a Mimic managed collection.')
-	.usage('$0 [args] <files...>')
-	.example('$0 -i somehwere -u me .', 'create a copy of the collection at "somewhere" as user "me"')
+	.usage('Make a local copy (clone) of a Mimic managed collection.')
+	.usage('mimic-clone [args] <files...>')
+	.example('mimic-clone -i http://some/where .', 'create a local copy of the collection at "http://some/where"')
 	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
@@ -66,7 +66,8 @@ var options  = yargs
 		'u' : {
 			alias: 'username',
 			describe : 'The username of the account to use at the destination host.',
-			type: 'string'
+			type: 'string',
+			default: 'anonymous'
 		},
 		
 		// Cypher

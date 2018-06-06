@@ -16,9 +16,9 @@ const mimic = require('./lib/mimic.js');
 // Configure the app
 var options  = yargs
 	.version('1.0.0')
-	.usage('Clone (copy) a Mimic managed collection.')
-	.usage('$0 [args] <files...>')
-	.example('$0 -i somehwere -u me .', 'create a copy of the collection at "somewhere" as user "me"')
+	.usage('Synchronize the local copy of a Mimic collection with the source collection.')
+	.usage('mimic-pull [args] <files...>')
+	.example('mimic-pull .', 'synchonize the local file collection with the original source.')
 	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
