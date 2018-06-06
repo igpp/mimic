@@ -104,7 +104,9 @@ var main = function(args)
 	if( ! options.direction ) { console.log("Missing direction (-d). Required"); good = false;}
 	if( ! options.username ) { console.log("Missing username (-u). Required"); good = false; }
 	if( ! options.uri ) { console.log("Missing URI (-i). Required"); good = false; }
-		
+
+	if( options.direction == "push") { console.log("Push for direction is not yet implemented."); good = false;}
+	
 	if( ! good) return;
 
 	if( ! mimic.init(args[0]) ) return;	// Already git managed

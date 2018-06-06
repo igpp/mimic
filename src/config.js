@@ -132,7 +132,9 @@ var main = function(args)
 	if( ! options.tag ) { console.log("Missing tag (-t). Required"); good = false; }
 	if( ! options.username ) { console.log("Missing username (-u). Required"); good = false; }
 	if( ! options.uri ) { console.log("Missing URI (-i). Required"); good = false; }
-		
+
+	if( options.direction == "push") { console.log("Push for direction is not yet implemented."); good = false;}
+	
 	if( ! good) return;
 	
 	// Define tag
