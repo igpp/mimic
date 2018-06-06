@@ -117,7 +117,8 @@ var main = function(args)
 	  return;
 	}
 	
-	// Process source argument 
+	// Process source argument
+	var arg = ".";
 	while((arg = args.shift()) != null) {
 		if(options.verbose) { console.log("Pruning in: " + arg); }
 		pruneFiles(arg, options.prefix);

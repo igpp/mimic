@@ -76,6 +76,7 @@ var main = function(args)
 	}
 	
 	// Process source argument 
+	var arg = ".";
 	while((arg = args.shift()) != null) {
 		if(options.verbose) { console.log("Refreshing files in: " + arg); }
 		mimic.refresh(arg, options.quick, true, options.verbose, options.test);

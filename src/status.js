@@ -58,8 +58,9 @@ var main = function(args)
 	  yargs.showHelp();
 	  return;
 	}
-	
+		
 	// Process source argument 
+	var arg = ".";
 	while((arg = args.shift()) != null) {
 		if(options.verbose) { console.log("Scanning files in: " + arg); }
 		mimic.refresh(arg, options.quick, true, options.verbose, 2);

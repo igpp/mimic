@@ -76,6 +76,7 @@ var main = function(args)
 	}
 	
 	// Process source argument 
+	var arg = ".";
 	while((arg = args.shift()) != null) {
 		if(options.verbose) { console.log("Adding files in: " + arg); }
 		mimic.add(arg, options.recurse, options.verbose, options.test);
