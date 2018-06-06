@@ -9,7 +9,6 @@
 const fs = require('fs');
 const path = require('path');
 const yargs = require('yargs');
-// const carrier = require('carrier');
 const readlines = require('n-readlines');
 const convert = require('convert-units');
 const commaNumber = require('comma-number');
@@ -120,30 +119,6 @@ var main = function(args)
 	var c = convert(totalSize).from('b').toBest();
 	console.log("  Bytes: " + commaNumber(+(Math.round(c.val + "e+2")  + "e-2")) + " " +  c.unit);
 	console.log("");
-	
-/*	
-	// List summary of files under management
-	var inStream = fs.createReadStream(checksumPath, {flags:'r'});
-	carrier.carry(inStream)
-		.on('line', function(line) {
-			line = line.trim();
-			if(line.length == 0) return;	// Empty line
-			if(line[0] == "#")	return;	// Comment
-			var part = line.split(',');	// Parse
-			if(part.length != 4) return;	// Wrong number of parts
-
-			// { length: part[0], checksum: part[1], path: part[2] };
-			fileCnt++;
-			totalSize +=  parseInt(part[0]);
-		})
-		.on ('end', function () {
-	   		console.log("  Files: " + commaNumber(fileCnt));
-			var c = convert(totalSize).from('b').toBest();
-	   		console.log("  Bytes: " + commaNumber(+(Math.round(c.val + "e+2")  + "e-2")) + " " +  c.unit);
-	   		console.log("");
-		})
-		;
-*/	
 }
 
 main(args);

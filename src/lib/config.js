@@ -8,7 +8,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const carrier = require('carrier');
 
 var MimicFolder = ".mimic";
 
