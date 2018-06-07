@@ -77,7 +77,6 @@ function pruneFiles(filepath, prefix) {
 	var changed = false;
 	
 	var root = config.findRoot(filepath);
-	if(options.verbose) { console.log('mimic base: ' + root); }
 	
 	// Test if under mimic management
 	if(root === undefined || root === null) {	// Not initialized

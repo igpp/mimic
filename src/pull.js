@@ -72,8 +72,6 @@ var main = function(args)
 		return;
 	}
 
-	if(options.verbose) console.log('mimic base at: ' + root);
-
 	var settings = config.load(filePath);
 	var pullSettings = settings["Pull"];
 	if( ! pullSettings ) {

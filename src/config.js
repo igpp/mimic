@@ -108,7 +108,6 @@ var main = function(args)
 	var filePath = args[0];
 	
 	var root = config.findRoot(filePath);
-	if(options.verbose) { console.log('mimic base at: ' + root); }
 	
 	// Test if under mimic management
 	if(root === undefined || root === null) {	// Not initialized

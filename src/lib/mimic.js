@@ -140,7 +140,7 @@ module.exports = {
 			var dirPath = path.normalize( path.join(Home, checksumRec.path) );
 			RemovedCnt++;
 			try {
-				if( checksum.isDir(checksumRec.checksum) ) {
+				if( checksum.isDir(checksumRec.checksum) ) { // if no checksum is a blind (invisible) copy
 					fs.rmdir(dirPath, (err) => { resolve(checksumRec.path); } );
 				} else {
 					fs.unlink(dirPath, (err) => { resolve(checksumRec.path); } );
@@ -162,7 +162,7 @@ module.exports = {
 			// Pull file
 			copyfile.pullScp(Home, outPathname, checksumRec.path, Baseurl.host, Baseurl.path, Username, Key, checksum.modified, (pathname, length, modified) => 
 				{ 
-					if(Verbose) {
+					if(Verbose && checksumRec.checksum) { // if no checksum is a blind (invisible) copy
 						var c = convert(length).from('b').toBest();
 						var bytes = commaNumber(+(Math.round(c.val + "e+2")  + "e-2")) + " " +  c.unit;
 						console.log('Copied: ' + pathname + ' (' + bytes + ')'); 
@@ -171,8 +171,11 @@ module.exports = {
 						var timestamp = new Date(modified);
 						fs.utimes( path.normalize( path.join(Home, pathname) ), timestamp, timestamp, (err) => { if(err) console.log(err); } );
 					}
-					FileCnt++; 
-					TotalSize += length; 
+					if(checksumRec.checksum) {	// Count it - otherwise a blind (invisible) copy
+						FileCnt++; 
+						TotalSize += length; 
+					}
+					resolve(pathname);
 				}
 			);
 		});
@@ -186,7 +189,7 @@ module.exports = {
 			// Pull file
 			copyfile.pullHttps(Home, outPathname, checksumRec.path, Baseurl.href, checksumRec.modified, (pathname, length, modified) => 
 				{ 
-					if(Verbose) {
+					if(Verbose && checksumRec.checksum) {  // if no checksum is a blind (invisible) copy
 						var c = convert(length).from('b').toBest();
 						var bytes = commaNumber(+(Math.round(c.val + "e+2")  + "e-2")) + " " +  c.unit;
 						console.log('Copied: ' + pathname + ' (' + bytes + ')'); 
@@ -195,15 +198,17 @@ module.exports = {
 						var timestamp = new Date(modified);
 						fs.utimes( path.normalize( path.join(Home, pathname) ), timestamp, timestamp, (err) => { if(err) console.log(err); } ); 
 					}
-					FileCnt++; 
-					TotalSize += length; 
+					if(checksumRec.checksum) {	// Count it - otherwise a blind (invisible) copy
+						FileCnt++; 
+						TotalSize += length; 
+					}
 					resolve(pathname);
 				}
 			);
 		});
 	},
 
-	pullFromScp : function (checksumRec, outPathname) {
+	pullFromFtp : function (checksumRec, outPathname) {
 		return new Promise(function(resolve, reject) {
 			if( checksum.isDir(checksumRec.checksum) ) { resolve(checksumRec.path); }
 			if( typeof outPathname != 'string' ) { outPathname = checksumRec.path; }
@@ -211,7 +216,7 @@ module.exports = {
 			// Pull file
 			copyfile.pullFtp(Home, outPathname, checksumRec.path, Baseurl.host, Baseurl.path, checksumRec.modified, (pathname, length, modified) => 
 				{ 
-					if(Verbose) {
+					if(Verbose && checksumRec.checksum) {
 						var c = convert(length).from('b').toBest();
 						var bytes = commaNumber(+(Math.round(c.val + "e+2")  + "e-2")) + " " +  c.unit;
 						console.log('Copied: ' + pathname + ' (' + bytes + ')'); 
@@ -220,8 +225,11 @@ module.exports = {
 						var timestamp = new Date(modified);
 						fs.utimes( path.normalize( path.join(Home, pathname) ), timestamp, timestamp, (err) => { if(err) console.log(err); } );
 					}
-					FileCnt++; 
-					TotalSize += length; 
+					if(checksumRec.checksum) {	// Count it - otherwise a blind (invisible) copy
+						FileCnt++; 
+						TotalSize += length; 
+					}
+					resolve(pathname);
 				}
 			);
 		});
@@ -319,9 +327,10 @@ module.exports = {
 			self.Key = self.loadKey(username, keyfile);
 			
 			// Create a temporary record to pull checksum file - store in temporary file
+			var verbose = self.Verbose;
 			var checksumRec = checksum.createChecksumRecord(0, 0, 0, config.ChecksumFile);
 			await this.pullFrom(checksumRec, config.ChecksumFile + ".tmp");
-			var checksumTemp = path.normalize(path.join(home, config.ChecksumFile + ".tmp"))
+			var checksumTemp = path.normalize(path.join(home, config.ChecksumFile + ".tmp"));
 			var remoteInventory = checksum.loadFrom(checksumTemp);
 			
 			// Load checksum
@@ -384,7 +393,10 @@ module.exports = {
 							Promise.all(fileList.map(action))
 								.then(function() { // Fix timestamps on folders
 									Promise.all(folderList.map(self.stamp))
-									.then(function() { self.summary(FileCnt, TotalSize, RemovedCnt); })
+									.then(function() { 
+										fs.unlinkSync(checksumTemp);	// Remove temp file
+										self.summary(FileCnt, TotalSize, RemovedCnt); 
+									})
 									;
 								}
 							)
@@ -418,7 +430,6 @@ module.exports = {
 		var changed = false;
 		
 		var root = config.findRoot(filepath);
-		if(verbose) { console.log('mimic base: ' + root); }
 		
 		// Test if under mimic management
 		if(root === undefined || root === null) {	// Not initialized
@@ -520,7 +531,6 @@ module.exports = {
 		var changed = false;
 		
 		var root = config.findRoot(filepath);
-		if(verbose) { console.log('mimic base: ' + root); }
 		
 		// Test if under mimic management
 		if(root === undefined || root === null) {	// Not initialized
