@@ -85,7 +85,6 @@ module.exports = {
 		console.log("");
 	},
 	
-
 	/** Set the timestamp on a folder
 	 **/
 	stamp : function(checksumRec) {
@@ -99,8 +98,23 @@ module.exports = {
 		}
 		);
 	},
-	
 
+	/** Load a security key (cert)
+	 **/
+	loadKey : function(username, keyfile) {
+		if( username ) {
+			if( username == "." || username == "anonymous" ) return null;	// No key
+			
+			if( keyfile ) {	// Replace "~" with home
+				keyfile = keyfile.replace("~", os.homedir());
+			} else {	// Use common (default) location
+				keyfile = path.normalize(path.join(os.homedir(), ".ssh/id_rsa"));
+			}
+			return fs.readFileSync(keyfile);
+		}
+		return null;	// No key
+	},
+	
 	// Create a folder
 	createFolder : function(checksumRec) {
 		return new Promise(function(resolve, reject) {
@@ -238,14 +252,7 @@ module.exports = {
 
 		try {
 			// Load SSH keyfile (cert)
-			if( username ) {
-				if( keyfile ) {	// Replace "~" with home
-					keyfile = keyfile.replace("~", os.homedir());
-				} else {
-					keyfile = path.normalize(path.join(os.homedir(), ".ssh/id_rsa"));
-				}
-				self.Key = fs.readFileSync(keyfile);
-			}
+			self.Key = self.loadKey(username, keyfile);
 		
 			// Create a temporary record to pull checksum file
 			var checksumRec = checksum.createChecksumRecord(0, 0, 0, config.ChecksumFile);
@@ -309,14 +316,7 @@ module.exports = {
 
 		try {
 			// Load SSH keyfile (cert)
-			if( username ) {
-				if( keyfile ) {	// Replace "~" with home
-					keyfile = keyfile.replace("~", os.homedir());
-				} else {
-					keyfile = path.normalize(path.join(os.homedir(), ".ssh/id_rsa"));
-				}
-				self.Key = fs.readFileSync(keyfile);
-			}
+			self.Key = self.loadKey(username, keyfile);
 			
 			// Create a temporary record to pull checksum file - store in temporary file
 			var checksumRec = checksum.createChecksumRecord(0, 0, 0, config.ChecksumFile);
@@ -640,14 +640,7 @@ module.exports = {
 
 		try {
 			// Load SSH keyfile (cert)
-			if( username ) {
-				if( keyfile ) {	// Replace "~" with home
-					keyfile = keyfile.replace("~", os.homedir());
-				} else {
-					keyfile = path.normalize(path.join(os.homedir(), ".ssh/id_rsa"));
-				}
-				self.Key = fs.readFileSync(keyfile);
-			}
+			self.Key = self.loadKey(username, keyfile);
 			
 			// Separate files and folders
 			var fileList = new Array();
