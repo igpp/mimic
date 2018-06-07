@@ -457,16 +457,16 @@ module.exports = {
 				var resourcePath = "./" + path.relative(root, path.join(filepath, params.path));	// Make relative to base
 				resourcePath = config.canonicalPath(resourcePath);
 				if(typeof localMap[resourcePath] === 'undefined') {	// new add to list
-					if(params.directory) {
+					if(params.directory) {	// Folder
 						folderCnt++;
 						if(verbose) console.log("     New: " + resourcePath);
 						if( ! testMode) {
 							// checksum.writeChecksumRecord(out, 0, params.stat.mtimeMs, checksum.DirDigest, resourcePath);
-							localMap[resourcePath] = checksum.createChecksumRecord(params.stat.size, params.stat.mtimeMs, 
+							localMap[resourcePath] = checksum.createChecksumRecord(0, params.stat.mtimeMs, 
 								checksum.DirDigest, resourcePath);
 							changed = true;
 						}
-					} else {
+					} else {	// File
 						fileCnt++;
 						if(verbose) console.log("     New: " + resourcePath);
 						if( ! testMode) {
@@ -575,7 +575,11 @@ module.exports = {
 				} else {	// Existing - check profile
 					var ok = true;
 					var stat = fs.statSync(resourcePath);
+					
+					// Fix up state values
+					if(params.directory) { stat.size = 0; }	// Folders do have a size, but we make it 0 for the inventory
 					var statMod = Math.floor(stat.mtimeMs); // stat.mtimeMs includes fractional ms
+					
 					if(resourceInfo.modified != statMod || resourceInfo.length != stat.size) {
 						if(params.directory) {
 							updateFolderCnt++;
