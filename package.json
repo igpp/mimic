@@ -28,7 +28,6 @@
     "grunt": "^0.4.5"
   },
   "dependencies": {
-    "@ronomon/utimes": "^2.2.0",
     "comma-number": "^2.0.0",
     "convert-units": "^2.3.4",
     "ftp": "^0.3.10",
