@@ -74,7 +74,8 @@ var options  = yargs
 		'u' : {
 			alias: 'username',
 			describe : 'The username of the account to use at the destination host.',
-			type: 'string'
+			type: 'string',
+			default: 'anonymous'			
 		},
 		
 		// Cypher
@@ -128,7 +129,6 @@ var main = function(args)
 	var good = true;
 	
 	if( ! options.direction ) { console.log("Missing direction (-d). Required"); good = false;}
-	if( ! options.tag ) { console.log("Missing tag (-t). Required"); good = false; }
 	if( ! options.username ) { console.log("Missing username (-u). Required"); good = false; }
 	if( ! options.uri ) { console.log("Missing URI (-i). Required"); good = false; }
 
@@ -145,7 +145,7 @@ var main = function(args)
 	
 	if( options.tag ) {  info[direction]['tag'] = options.tag;  }
 	if( options.username ) {  info[direction]['username'] = options.username;  }
-	if( options.uri ) { info[direction]['URI'] = options.uri;  }
+	if( options.uri ) { info[direction]['uri'] = options.uri;  }
 	if( options.cipher ) { info[direction]['withCipher'] = options.cipher;  }
 	if( options.key ) { info[direction]['keyFile'] = options.key;  }
 	

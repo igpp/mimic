@@ -325,6 +325,24 @@ module.exports = {
 		}
 	},
 	
+	syncPull : async function(home, verbose) {
+		var root = this.findRoot(home);
+	
+		// Test if under mimic management
+		if(root === undefined || root === null) {	// Not initialized
+			return;
+		}
+
+		var settings = config.load(home);
+		var pullSettings = settings["Pull"];
+		if( ! pullSettings ) {
+			console.log("No 'pull' source is defined. Mimic collection is not configured to pull.");
+			return;
+		}
+
+		this.syncWithPull(home, pullSettings.uri, pullSettings.username, pullSettings.keyfile, verbose);		
+	},
+	
 	syncWithPull : async function(home, uri, username, keyfile, verbose) {
 		var self = this;
 		

@@ -64,3 +64,4 @@ test/download-test
 test/prune-test
 test/pull-test
 test/refresh-test
+test/bundle-test
