@@ -26,6 +26,6 @@ echo "5372,1328577692000,12d4cee083d11530d61b467183ebd7cd0a1131a5,./BOGUS/ERRATA
 echo ""
 echo "Doing refresh..."
 
-node ../../src/refresh.js -v -r .
+node ../../src/refresh.js -v .
 
 cd ..

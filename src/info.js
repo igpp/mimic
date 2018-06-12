@@ -102,6 +102,7 @@ var main = function(args)
 
 	var reader = new readlines(checksumPath);
 
+	var line = "";
 	while (line = reader.next()) {
 		line = line.toString('utf8');
 		line = line.trim();

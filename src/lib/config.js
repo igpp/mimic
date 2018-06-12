@@ -41,7 +41,7 @@ module.exports = {
 		var newPath = path.resolve(path.join(basePath, ".."));
 		if(normPath === newPath) return null;	// Reached top
 
-		return this.findRoot(path.resolve(path.join(basePath, "..")));
+		return this.findRoot(path.resolve(path.join(basePath, ".."))); // Look in parent folder
 	},
 
 	/**

@@ -60,11 +60,19 @@ var main = function(args)
 	}
 		
 	// Process source argument 
-	var arg = ".";
-	while((arg = args.shift()) != null) {
-		if(options.verbose) { console.log("Scanning files in: " + arg); }
-		mimic.refresh(arg, options.quick, true, options.verbose, 2);
+	var filePath = args[0];
+	if(options.verbose) { console.log("Scanning files in: " + filePath); }
+	
+	var root = mimic.findRoot(filePath);
+	
+	// Test if under mimic management
+	if(root === undefined || root === null) {	// Not initialized
+		return;
 	}
+	
+	console.log("root: " + root);
+	
+	mimic.refresh(root, options.quick, true, options.verbose, 2);
 	
 }
 

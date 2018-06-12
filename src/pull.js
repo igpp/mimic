@@ -62,13 +62,10 @@ var main = function(args)
 
 	var filePath = args[0];
 
-	var root = config.findRoot(filePath);
+	var root = mimic.findRoot(filePath);
 	
 	// Test if under mimic management
 	if(root === undefined || root === null) {	// Not initialized
-		console.log("The folder '" + filepath + "' is not under Mimic management.");
-		console.log("To place it under Mimic management issue the command mimic-init");
-		console.log("in the folder or one of the parent folders.");
 		return;
 	}
 

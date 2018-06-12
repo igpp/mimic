@@ -131,16 +131,8 @@ var main = function(args)
 	
 	config.store(filePath, info);
 
-	var root = config.findRoot(filePath);
+	var root = mimic.findRoot(filePath);
 	
-	// Test if under mimic management
-	if(root === undefined || root === null) {	// Not initialized
-		console.log("The folder '" + filePath + "' is not under Mimic management.");
-		console.log("To place it under Mimic management issue the command mimic-init");
-		console.log("in the folder or one of the parent folders.");
-		return;
-	}
-
 	mimic.pull(root, options.uri, options.username, options.keyfile, options.verbose);
 }
 

@@ -74,6 +74,20 @@ module.exports = {
 		return front + back;	
 	},
 
+	findRoot : function(filePath) {
+		var root = config.findRoot(filePath);
+		
+		// Test if under mimic management
+		if(root === undefined || root === null) {	// Not initialized
+			console.log("The folder '" + filePath + "' is not under Mimic management.");
+			console.log("To place it under Mimic management issue the command mimic-init");
+			console.log("in the folder or one of the parent folders.");
+			return null;
+		}
+		
+		return root;
+	},
+	
 	summary : function(copied, size, removed)
 	{
 		console.log("");
@@ -394,6 +408,7 @@ module.exports = {
 								.then(function() { // Fix timestamps on folders
 									Promise.all(folderList.map(self.stamp))
 									.then(function() { 
+										checksum.store(home, remoteInventory);
 										fs.unlinkSync(checksumTemp);	// Remove temp file
 										self.summary(FileCnt, TotalSize, RemovedCnt); 
 									})
@@ -518,6 +533,8 @@ module.exports = {
 	 * @throws Exception	if any error occurs.
 	 */
 	refresh : function(filepath, quick, recurse, verbose, testMode) {
+		var self = this;
+		
 		// Global Variables
 		var folderCnt = 0;
 		var fileCnt = 0;
@@ -530,16 +547,13 @@ module.exports = {
 		
 		var changed = false;
 		
-		var root = config.findRoot(filepath);
+		var root = self.findRoot(filepath);
 		
 		// Test if under mimic management
 		if(root === undefined || root === null) {	// Not initialized
-			console.log("The folder '" + filepath + "' is not under Mimic management.");
-			console.log("To place it under Mimic management issue the command mimic-init");
-			console.log("in the folder or one of the parent folders.");
 			return;
 		}
-		
+	
 		// Load current list of files
 		var localMap = checksum.load(filepath);
 
@@ -547,7 +561,7 @@ module.exports = {
 		
 		var includeFolders = /(^[.]$|^[^.])/; //  ignore folders starting with ., except for '.' (current directory)
 		var includeFiles = /^.*$/;	// Everything
-
+		
 		if(fs.statSync(filepath).isDirectory()) {	// Walk the tree		
 			walk(root, { filterFolders: includeFolders, filterFiles: includeFiles, recurse: recurse }, function(params, cb) {
 				var resourcePath = "./" + path.relative(root, path.join(filepath, params.path));	// Make relative to base
@@ -574,7 +588,8 @@ module.exports = {
 					changed = true;
 				} else {	// Existing - check profile
 					var ok = true;
-					var stat = fs.statSync(resourcePath);
+					var realPath = path.join(filepath, resourcePath);
+					var stat = fs.statSync(realPath);
 					
 					// Fix up state values
 					if(params.directory) { stat.size = 0; }	// Folders do have a size, but we make it 0 for the inventory
@@ -597,7 +612,7 @@ module.exports = {
 					}
 					if( ! quick ) {	// Check checksum
 						if( ! params.directory) {	// Only do files
-							var hash = checksum.getChecksumSync(resourcePath);
+							var hash = checksum.getChecksumSync(realPath);
 							if(resourceInfo.checksum !== hash) {
 								updateFileCnt++;
 								if(verbose) {
@@ -628,7 +643,7 @@ module.exports = {
 					}
 				}
 			}).then(function() {	// Finalize changes
-				if(changed && ! testMode) { checksum.store(filepath, checksum.sort(freshMap)); }
+				if(changed && ! testMode) { checksum.store(root, checksum.sort(freshMap)); }
 				console.log("");
 				console.log("Summary");
 				console.log(" Scanned: " + folderCnt + " folder(s); " + fileCnt + " files(s)");

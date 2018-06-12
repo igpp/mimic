@@ -89,7 +89,7 @@ function pruneFiles(filepath, prefix) {
 	// Load current list of files
 	var localMap = checksum.load(filepath);
 
-	for(key in localMap) {
+	for(var key in localMap) {
 		if(key.startsWith(prefix)) {
 			removeCnt++;
 			if( ! options.test) {
