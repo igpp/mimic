@@ -5,6 +5,7 @@
  * 
  * @author Todd King
  *
+ * Provided under the Apache License 2.0
  */
 const yargs = require('yargs');
 
@@ -19,7 +20,7 @@ var options  = yargs
 	.usage('Manage bundles of Mimic managed collection.')
 	.usage('mimic-add [args] files')
 	.example('mimic-bundle -a example', 'add the collection "example" to the bundle')
-	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
+	.epilog("Development funded by NASA's VMO and PDS projects at UCLA\nand provided under the Apache License 2.0.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
 	

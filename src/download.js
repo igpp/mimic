@@ -5,6 +5,7 @@
  * 
  * @author Todd King
  *
+ * Provided under the Apache License 2.0
  */
 
 const yargs = require('yargs');
@@ -20,7 +21,7 @@ var options  = yargs
 	.usage('Download files listing in an inventory (package) using Mimic.')
 	.usage('mimic-download [args] <files...>')
 	.example('mimic-download -p pack.mimic .', 'download the files listed in "pack.mimic"')
-	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
+	.epilog("Development funded by NASA's VMO and PDS projects at UCLA\nand provided under the Apache License 2.0.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
 	

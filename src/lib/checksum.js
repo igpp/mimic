@@ -2,6 +2,8 @@
  * Calculate, check and manage sha1 checksums on files.
  *
  * @author Todd King
+ *
+ * Provided under the Apache License 2.0
  */
 
 const crypto = require('crypto');
@@ -9,9 +11,6 @@ const fs = require('fs');
 const path = require('path');
 const config = require('./config.js');
 const readlines = require('n-readlines');
-
-const mOverview = "Methods to calculate, check and manage sha1 checksums on files.";
-const mAcknowledge = "Development funded by NASA's PDS project at UCLA.";
 
 //Public interface
 module.exports = {

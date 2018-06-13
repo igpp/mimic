@@ -3,10 +3,9 @@
 /**
  * List the file tree.
  * 
- * To run the tool be sure you have installed:
- * npm install yargs
- *
  * @author Todd King
+ *
+ * Provided under the Apache License 2.0
  **/
 const fs = require('fs');
 const yargs = require('yargs');
@@ -20,7 +19,7 @@ var options  = yargs
 	.usage('List the file tree. Optionally list only files with a given extension.')
 	.usage('mimic-tree [args] <files...>')
 	.example('mimic-tree -r .', 'list the file tree starting at the current folder.')
-	.epilog("Development funded by NASA's VMO project at UCLA.")
+	.epilog("Development funded by NASA's VMO and PDS projects at UCLA\nand provided under the Apache License 2.0.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
 	

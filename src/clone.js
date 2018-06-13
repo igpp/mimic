@@ -5,6 +5,7 @@
  * 
  * @author Todd King
  *
+ * Provided under the Apache License 2.0
  */
 
 const yargs = require('yargs');
@@ -19,7 +20,7 @@ var options  = yargs
 	.usage('Make a local copy (clone) of a Mimic managed collection.')
 	.usage('mimic-clone [args] <files...>')
 	.example('mimic-clone -i http://some/where .', 'create a local copy of the collection at "http://some/where"')
-	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
+	.epilog("Development funded by NASA's VMO and PDS projects at UCLA\nand provided under the Apache License 2.0.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
 	

@@ -3,6 +3,7 @@
  * 
  * @author Todd King
  *
+ * Provided under the Apache License 2.0
  */
  
 const fs = require('fs');

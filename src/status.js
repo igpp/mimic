@@ -5,6 +5,7 @@
  * 
  * @author Todd King
  *
+ * Provided under the Apache License 2.0
  */
 const yargs = require('yargs');
 
@@ -17,7 +18,8 @@ var options  = yargs
 	.usage('Check the status of Mimic managed collection.')
 	.usage('mimic-status [args] files')
 	.example('mimic-status .', 'check the inventory of mangaged files in the current (.) folder.')
-	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
+	.example("Provided under the Apache License 2.0")
+	.epilog("Development funded by NASA's VMO and PDS projects at UCLA\nand provided under the Apache License 2.0.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
 	

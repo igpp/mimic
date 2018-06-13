@@ -6,6 +6,7 @@
  * 
  * @author Todd King
  *
+ * Provided under the Apache License 2.0
  */
 
 const fs = require('fs');
@@ -19,7 +20,7 @@ var options  = yargs
 	.usage('Configure synchronization with Mimic collections on a remote hosts.')
 	.usage('mimic-config [args] <files...>')
 	.example('mimic-config -l .', 'list configuration in the current folder')
-	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
+	.epilog("Development funded by NASA's VMO and PDS projects at UCLA\nand provided under the Apache License 2.0.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
 	

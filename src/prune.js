@@ -5,6 +5,7 @@
  * 
  * @author Todd King
  *
+ * Provided under the Apache License 2.0
  */
 const fs = require('fs');
 const path = require('path');
@@ -22,7 +23,7 @@ var options  = yargs
 	.usage('Prune (remove) enties from a Mimic managed collection that begin with a given path.')
 	.usage('mimic-prune [args] path')
 	.example('mimic-prune data/example', 'remove entries that begin with "data/example" from the Mimic inventory')
-	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
+	.epilog("Development funded by NASA's VMO and PDS projects at UCLA\nand provided under the Apache License 2.0.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
 	

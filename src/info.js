@@ -5,6 +5,7 @@
  * 
  * @author Todd King
  *
+ * Provided under the Apache License 2.0
  */
 const fs = require('fs');
 const path = require('path');
@@ -24,7 +25,7 @@ var options  = yargs
 	.usage('Display information about a Mimic managed collection.')
 	.usage('mimic-info [args]')
 	.example('mimic-info .', 'display Mimic information about the current folder.')
-	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
+	.epilog("Development funded by NASA's VMO and PDS projects at UCLA\nand provided under the Apache License 2.0.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
 	

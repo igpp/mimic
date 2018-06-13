@@ -7,6 +7,7 @@
  * 
  * @author Todd King
  *
+ * Provided under the Apache License 2.0
  */
 const yargs = require('yargs');
 
@@ -19,7 +20,7 @@ var options  = yargs
 	.usage('Initialize a Mimic managed collection.')
 	.usage('mimic-init [args]')
 	.example('mimic-init .', 'initialize the current folder')
-	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
+	.epilog("Development funded by NASA's VMO and PDS projects at UCLA\nand provided under the Apache License 2.0.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
 	

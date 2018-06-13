@@ -5,6 +5,7 @@
  * 
  * @author Todd King
  *
+ * Provided under the Apache License 2.0
  */
 
 const yargs = require('yargs');
@@ -19,7 +20,7 @@ var options  = yargs
 	.usage('Synchronize the local copy of a Mimic collection with the source collection.')
 	.usage('mimic-pull [args] <files...>')
 	.example('mimic-pull .', 'synchonize the local file collection with the original source.')
-	.epilog("Development funded by NASA's VMO and PDS project at UCLA.")
+	.epilog("Development funded by NASA's VMO and PDS projects at UCLA\nand provided under the Apache License 2.0.")
 	.showHelpOnFail(false, "Specify --help for available options")
 	.help('h')
 	
