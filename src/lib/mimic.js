@@ -579,9 +579,15 @@ module.exports = {
 		if(root === undefined || root === null) {	// Not initialized
 			return;
 		}
+		
+		if(verbose && ( ! quick)) {
+			console.log("Inspecting checksums can take a while.");
+			console.log("Consider using the quick (-q) option for faster processing.");
+		}
 	
 		// Load current list of files
 		var localMap = checksum.load(filepath);
+		if(verbose) { var keys = Object.keys(localMap); console.log("Checking: " + commaNumber(keys.length) + "file(s)"); }
 
 		var freshMap = [];
 		

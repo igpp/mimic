@@ -45,7 +45,7 @@ var options  = yargs
 			type: 'string'
 		},
 
-		// Username
+		// Keyfile
 		'k' : {
 			alias: 'keyfile',
 			describe : 'The name of the file containing the SSH private key.',
