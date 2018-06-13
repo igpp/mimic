@@ -179,7 +179,7 @@ module.exports = {
 					if(Verbose && checksumRec.checksum) { // if no checksum is a blind (invisible) copy
 						var c = convert(length).from('b').toBest();
 						var bytes = commaNumber(+(Math.round(c.val + "e+2")  + "e-2")) + " " +  c.unit;
-						console.log('Copied: ' + pathname + ' (' + bytes + ')'); 
+						if(Verbose) console.log('Copied: ' + pathname + ' (' + bytes + ')'); 
 					}
 					if(modified) { 
 						var timestamp = new Date(modified);
@@ -206,7 +206,7 @@ module.exports = {
 					if(Verbose && checksumRec.checksum) {  // if no checksum is a blind (invisible) copy
 						var c = convert(length).from('b').toBest();
 						var bytes = commaNumber(+(Math.round(c.val + "e+2")  + "e-2")) + " " +  c.unit;
-						console.log('Copied: ' + pathname + ' (' + bytes + ')'); 
+						if(Verbose) console.log('Copied: ' + pathname + ' (' + bytes + ')'); 
 					}
 					if(modified) { 
 						var timestamp = new Date(modified);
@@ -233,7 +233,7 @@ module.exports = {
 					if(Verbose && checksumRec.checksum) {
 						var c = convert(length).from('b').toBest();
 						var bytes = commaNumber(+(Math.round(c.val + "e+2")  + "e-2")) + " " +  c.unit;
-						console.log('Copied: ' + pathname + ' (' + bytes + ')'); 
+						if(Verbose) console.log('Copied: ' + pathname + ' (' + bytes + ')'); 
 					}
 					if(modified) { 
 						var timestamp = new Date(modified);
@@ -318,10 +318,11 @@ module.exports = {
 						;
 					});
 				})
-				.catch(reason => { console.log(reason) })
+				.catch(reason => { console.log(reason.message); if(Verbose) { console.log(reason) } })
 				;
 		} catch(reason) {
-			console.log(reason);
+			console.log(reason.message);
+			if(Verbose) { console.log(reason) }
 		}
 	},
 	
@@ -361,8 +362,9 @@ module.exports = {
 			// Create a temporary record to pull checksum file - store in temporary file
 			var verbose = self.Verbose;
 			var checksumRec = checksum.createChecksumRecord(0, 0, 0, config.ChecksumFile);
-			await this.pullFrom(checksumRec, config.ChecksumFile + ".tmp");
 			var checksumTemp = path.normalize(path.join(home, config.ChecksumFile + ".tmp"));
+
+			await this.pullFrom(checksumRec, config.ChecksumFile + ".tmp");
 			var remoteInventory = checksum.loadFrom(checksumTemp);
 			
 			// Load checksum
@@ -436,10 +438,11 @@ module.exports = {
 						}
 					)
 				})
-				.catch(reason => { console.log(reason) })
+				.catch(reason => { console.log(reason.message); if(Verbose) { console.log(reason); } })
 				;
 		} catch(reason) {
-			console.log(reason);
+			console.log(reason.message);
+			if(Verbose) { console.log(reason); }
 		}
 	},
 
@@ -484,57 +487,62 @@ module.exports = {
 		var includeFolders = /(^[.]$|^[^.])/; //  ignore folders starting with ., except for '.' (current directory)
 		var includeFiles = /^.*$/;	// Everything
 
-		var stat = fs.statSync(filepath);
-		if(stat.isDirectory()) {	// Walk the tree		
-			walk(root, { filterFolders: includeFolders, filterFiles: includeFiles, recurse: recurse }, function(params, cb) {
-				var resourcePath = "./" + path.relative(root, path.join(filepath, params.path));	// Make relative to base
-				resourcePath = config.canonicalPath(resourcePath);
-				if(typeof localMap[resourcePath] === 'undefined') {	// new add to list
-					if(params.directory) {	// Folder
-						folderCnt++;
-						if(verbose) console.log("     New: " + resourcePath);
-						if( ! testMode) {
-							// checksum.writeChecksumRecord(out, 0, params.stat.mtimeMs, checksum.DirDigest, resourcePath);
-							localMap[resourcePath] = checksum.createChecksumRecord(0, params.stat.mtimeMs, 
-								checksum.DirDigest, resourcePath);
-							changed = true;
+		try {
+			var stat = fs.statSync(filepath);
+			if(stat.isDirectory()) {	// Walk the tree		
+				walk(root, { filterFolders: includeFolders, filterFiles: includeFiles, recurse: recurse }, function(params, cb) {
+					var resourcePath = "./" + path.relative(root, path.join(filepath, params.path));	// Make relative to base
+					resourcePath = config.canonicalPath(resourcePath);
+					if(typeof localMap[resourcePath] === 'undefined') {	// new add to list
+						if(params.directory) {	// Folder
+							folderCnt++;
+							if(verbose) console.log("     New: " + resourcePath);
+							if( ! testMode) {
+								// checksum.writeChecksumRecord(out, 0, params.stat.mtimeMs, checksum.DirDigest, resourcePath);
+								localMap[resourcePath] = checksum.createChecksumRecord(0, params.stat.mtimeMs, 
+									checksum.DirDigest, resourcePath);
+								changed = true;
+							}
+						} else {	// File
+							fileCnt++;
+							if(verbose) console.log("     New: " + resourcePath);
+							if( ! testMode) {
+								// checksum.writeFileChecksum(out, params.stat.size, params.stat.mtimeMs, resourcePath);
+								localMap[resourcePath] = checksum.createChecksumRecord(params.stat.size, params.stat.mtimeMs, 
+									checksum.getChecksumSync(resourcePath), resourcePath);
+								changed = true;
+							}
 						}
-					} else {	// File
-						fileCnt++;
-						if(verbose) console.log("     New: " + resourcePath);
-						if( ! testMode) {
-							// checksum.writeFileChecksum(out, params.stat.size, params.stat.mtimeMs, resourcePath);
-							localMap[resourcePath] = checksum.createChecksumRecord(params.stat.size, params.stat.mtimeMs, 
-								checksum.getChecksumSync(resourcePath), resourcePath);
-							changed = true;
-						}
+					}				
+					cb();
+				}).then(function() {
+					if(changed && ! testMode) { checksum.store(filepath, checksum.sort(localMap)); }
+					console.log("");
+					console.log("Summary");
+					console.log(" Folders: " + folderCnt);
+					console.log("   Files: " + fileCnt);
+					if(testMode) console.log("Test only. No changes were made.");
+				});
+			} else {	// Single file
+				if(localMap[filepath] === undefined) {
+					fileCnt++;
+					if(verbose) console.log("     New: " + resourcePath);
+					if( ! testMode) {
+						localMap[resourcePath] = checksum.createChecksumRecord(stat.size, stat.mtimeMs, 
+							checksum.getChecksumSync(resourcePath), resourcePath);
+						changed = true;
 					}
-				}				
-				cb();
-			}).then(function() {
+				}
 				if(changed && ! testMode) { checksum.store(filepath, checksum.sort(localMap)); }
 				console.log("");
 				console.log("Summary");
 				console.log(" Folders: " + folderCnt);
 				console.log("   Files: " + fileCnt);
 				if(testMode) console.log("Test only. No changes were made.");
-			});
-		} else {	// Single file
-			if(localMap[filepath] === undefined) {
-				fileCnt++;
-				if(verbose) console.log("     New: " + resourcePath);
-				if( ! testMode) {
-					localMap[resourcePath] = checksum.createChecksumRecord(stat.size, stat.mtimeMs, 
-						checksum.getChecksumSync(resourcePath), resourcePath);
-					changed = true;
-				}
 			}
-			if(changed && ! testMode) { checksum.store(filepath, checksum.sort(localMap)); }
-			console.log("");
-			console.log("Summary");
-			console.log(" Folders: " + folderCnt);
-			console.log("   Files: " + fileCnt);
-			if(testMode) console.log("Test only. No changes were made.");
+		} catch(reason) {
+			console.log(reason.message);
+			if(Verbose) { console.log(reason); }
 		}
 	},
 	
@@ -579,101 +587,106 @@ module.exports = {
 		
 		var includeFolders = /(^[.]$|^[^.])/; //  ignore folders starting with ., except for '.' (current directory)
 		var includeFiles = /^.*$/;	// Everything
-		
-		if(fs.statSync(filepath).isDirectory()) {	// Walk the tree		
-			walk(root, { filterFolders: includeFolders, filterFiles: includeFiles, recurse: recurse }, function(params, cb) {
-				var resourcePath = "./" + path.relative(root, path.join(filepath, params.path));	// Make relative to base
-				resourcePath = config.canonicalPath(resourcePath);
-				var resourceInfo = localMap[resourcePath];
-				
-				if(params.directory) { folderCnt++; } else { fileCnt++; }
 
-				if(typeof resourceInfo === 'undefined') {	// new - add to list
-					if(params.directory) {
-						addFolderCnt++;
-						if(verbose || testMode) console.log("     New: " + resourcePath);
-						if( ! testMode) {	// Do it
-							freshMap[resourcePath] = checksum.createChecksumRecord(0, params.stat.mtimeMs, checksum.DirDigest, resourcePath);
-						}
-					} else {
-						addFileCnt++;
-						if(verbose || testMode) console.log("     New: " + resourcePath);
-						if( ! testMode) {	// Do it
-							freshMap[resourcePath] = checksum.createChecksumRecord(params.stat.size, params.stat.mtimeMs, 
-								checksum.getChecksumSync(resourcePath), resourcePath);
-						}
-					}
-					changed = true;
-				} else {	// Existing - check profile
-					var ok = true;
-					var realPath = path.join(filepath, resourcePath);
-					var stat = fs.statSync(realPath);
+		try {
+			if(fs.statSync(filepath).isDirectory()) {	// Walk the tree		
+				walk(root, { filterFolders: includeFolders, filterFiles: includeFiles, recurse: recurse }, function(params, cb) {
+					var resourcePath = "./" + path.relative(root, path.join(filepath, params.path));	// Make relative to base
+					resourcePath = config.canonicalPath(resourcePath);
+					var resourceInfo = localMap[resourcePath];
 					
-					// Fix up state values
-					if(params.directory) { stat.size = 0; }	// Folders do have a size, but we make it 0 for the inventory
-					var statMod = Math.floor(stat.mtimeMs); // stat.mtimeMs includes fractional ms
-					
-					if(resourceInfo.modified != statMod || resourceInfo.length != stat.size) {
+					if(params.directory) { folderCnt++; } else { fileCnt++; }
+
+					if(typeof resourceInfo === 'undefined') {	// new - add to list
 						if(params.directory) {
-							updateFolderCnt++;
+							addFolderCnt++;
+							if(verbose || testMode) console.log("     New: " + resourcePath);
+							if( ! testMode) {	// Do it
+								freshMap[resourcePath] = checksum.createChecksumRecord(0, params.stat.mtimeMs, checksum.DirDigest, resourcePath);
+							}
 						} else {
-							updateFileCnt++;
-						}
-						if(verbose) {
-							if(verbose || testMode) console.log("   Update: " + resourcePath);
-						}
-						if( ! testMode) { // Update info
-							resourceInfo.modified = stat.mtimeMs;
-							resourceInfo.length = stat.size;
-						}	
-						changed = true;	ok = false;					
-					}
-					if( ! quick ) {	// Check checksum
-						if( ! params.directory) {	// Only do files
-							var hash = checksum.getChecksumSync(realPath);
-							if(resourceInfo.checksum !== hash) {
-								updateFileCnt++;
-								if(verbose) {
-									console.log("   Update: " + resourcePath);
-								}
-								if( ! testMode) { // Do it
-									resourceInfo.checksum = hash;
-								}
-								changed = true; ok = false;
+							addFileCnt++;
+							if(verbose || testMode) console.log("     New: " + resourcePath);
+							if( ! testMode) {	// Do it
+								freshMap[resourcePath] = checksum.createChecksumRecord(params.stat.size, params.stat.mtimeMs, 
+									checksum.getChecksumSync(resourcePath), resourcePath);
 							}
 						}
-					}
-					freshMap[resourcePath] = resourceInfo;
-					if(verbose && ok && testMode == 2) { // Status reporting
-						console.log("       OK: " + resourcePath);
-					}
-				}			
-				cb();
-			}).then(function() {	// Determine which files were removed
-				var keys = Object.keys(localMap);
-				for(var i = 0; i < keys.length; i++) {
-					var resourcePath = keys[i];
-					if(typeof freshMap[resourcePath] === 'undefined') {	// removed
-						if(verbose || testMode) { console.log("   Remove: " + resourcePath); }
-						if( checksum.isDir(localMap[resourcePath].checksum) ) { removeFolderCnt++; }
-						else { removeFileCnt++; }
 						changed = true;
+					} else {	// Existing - check profile
+						var ok = true;
+						var realPath = path.join(filepath, resourcePath);
+						var stat = fs.statSync(realPath);
+						
+						// Fix up state values
+						if(params.directory) { stat.size = 0; }	// Folders do have a size, but we make it 0 for the inventory
+						var statMod = Math.floor(stat.mtimeMs); // stat.mtimeMs includes fractional ms
+						
+						if(resourceInfo.modified != statMod || resourceInfo.length != stat.size) {
+							if(params.directory) {
+								updateFolderCnt++;
+							} else {
+								updateFileCnt++;
+							}
+							if(verbose) {
+								if(verbose || testMode) console.log("   Update: " + resourcePath);
+							}
+							if( ! testMode) { // Update info
+								resourceInfo.modified = stat.mtimeMs;
+								resourceInfo.length = stat.size;
+							}	
+							changed = true;	ok = false;					
+						}
+						if( ! quick ) {	// Check checksum
+							if( ! params.directory) {	// Only do files
+								var hash = checksum.getChecksumSync(realPath);
+								if(resourceInfo.checksum !== hash) {
+									updateFileCnt++;
+									if(verbose) {
+										console.log("   Update: " + resourcePath);
+									}
+									if( ! testMode) { // Do it
+										resourceInfo.checksum = hash;
+									}
+									changed = true; ok = false;
+								}
+							}
+						}
+						freshMap[resourcePath] = resourceInfo;
+						if(verbose && ok && testMode == 2) { // Status reporting
+							console.log("       OK: " + resourcePath);
+						}
+					}			
+					cb();
+				}).then(function() {	// Determine which files were removed
+					var keys = Object.keys(localMap);
+					for(var i = 0; i < keys.length; i++) {
+						var resourcePath = keys[i];
+						if(typeof freshMap[resourcePath] === 'undefined') {	// removed
+							if(verbose || testMode) { console.log("   Remove: " + resourcePath); }
+							if( checksum.isDir(localMap[resourcePath].checksum) ) { removeFolderCnt++; }
+							else { removeFileCnt++; }
+							changed = true;
+						}
 					}
-				}
-			}).then(function() {	// Finalize changes
-				if(changed && ! testMode) { checksum.store(root, checksum.sort(freshMap)); }
-				console.log("");
-				console.log("Summary");
-				console.log(" Scanned: " + folderCnt + " folder(s); " + fileCnt + " files(s)");
-				console.log("     Add: " + addFolderCnt + " folder(s); " + addFileCnt + " files(s)");
-				console.log("  Remove: " + removeFolderCnt + " folder(s); " + removeFileCnt + " files(s)");
-				console.log("  Update: " + updateFolderCnt + " folder(s); " + updateFileCnt + " files(s)");
-				if(testMode) {
-					if(testMode != 2) { console.log("Test only. No changes were made."); }
-				}
-			});
-		} else {	// Single file
-			console.log('Only mimic collections can be refreshed.');
+				}).then(function() {	// Finalize changes
+					if(changed && ! testMode) { checksum.store(root, checksum.sort(freshMap)); }
+					console.log("");
+					console.log("Summary");
+					console.log(" Scanned: " + folderCnt + " folder(s); " + fileCnt + " files(s)");
+					console.log("     Add: " + addFolderCnt + " folder(s); " + addFileCnt + " files(s)");
+					console.log("  Remove: " + removeFolderCnt + " folder(s); " + removeFileCnt + " files(s)");
+					console.log("  Update: " + updateFolderCnt + " folder(s); " + updateFileCnt + " files(s)");
+					if(testMode) {
+						if(testMode != 2) { console.log("Test only. No changes were made."); }
+					}
+				});
+			} else {	// Single file
+				console.log('Only mimic collections can be refreshed.');
+			}
+		} catch(reason) {
+			console.log(reason.message);
+			if(Verbose) { console.log(reason); }
 		}
 	},	
 
@@ -723,10 +736,11 @@ module.exports = {
 						;
 					});
 				})
-				.catch(reason => { console.log(reason) })
+				.catch(reason => { console.log(reason.message); if(Verbose) { console.log(reason); } })
 				;
 		} catch(reason) {
 			console.log(reason);
+			if(Verbose) { console.log(reason); }
 		}
 	}
 }
