@@ -587,7 +587,7 @@ module.exports = {
 	
 		// Load current list of files
 		var localMap = checksum.load(filepath);
-		if(verbose) { var keys = Object.keys(localMap); console.log("Checking: " + commaNumber(keys.length) + "file(s)"); }
+		if(verbose) { var keys = Object.keys(localMap); console.log("Checking: " + commaNumber(keys.length) + " file(s)"); }
 
 		var freshMap = [];
 		
