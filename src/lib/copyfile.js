@@ -62,7 +62,9 @@ module.exports = {
 			// console.log('headers:', res.headers);
 
 			if(res.statusCode != 200) {
-				console.log('Unable to complete pull of "' + pathname + '".');
+				console.log('Unable to complete pull of "' + hostfile + '".');
+				console.log('Reason: ' + res.statusMessage);
+				console.log('url: ' + this.joinURL(uri, hostfile));
 				return;
 			}
 			var outStream = fs.createWriteStream(outFile)
