@@ -1,6 +1,6 @@
 {
   "name": "igpp-mimic",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "description": "File collection transfer and synchronization tools.",
   "main": "index.js",
   "engines": {
