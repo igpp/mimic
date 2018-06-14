@@ -103,10 +103,10 @@ module.exports = {
 		return root;
 	},
 	
-	summary : function(copied, size, removed)
+	summary : function(tag, copied, size, removed)
 	{
 		console.log("");
-		console.log("Summary");
+		console.log("Summary (" + tag + ")");
 		if(typeof removed != 'undefined') console.log(" Removed: " + commaNumber(removed));
 		console.log("  Copied: " + commaNumber(copied));
 		var c = convert(size).from('b').toBest();
@@ -329,7 +329,7 @@ module.exports = {
 					.then(function() {
 						// Fix timestamps on folders
 						Promise.all(folderList.map(self.stamp))
-						.then(function() { self.summary(FileCnt, TotalSize); })
+						.then(function() { self.summary(Home, FileCnt, TotalSize); })
 						;
 					});
 				})
@@ -445,7 +445,7 @@ module.exports = {
 									.then(function() { 
 										checksum.store(home, remoteInventory);
 										fs.unlinkSync(checksumTemp);	// Remove temp file
-										self.summary(FileCnt, TotalSize, RemovedCnt); 
+										self.summary(Home, FileCnt, TotalSize, RemovedCnt); 
 									})
 									;
 								}
@@ -549,7 +549,7 @@ module.exports = {
 				}
 				if(changed && ! testMode) { checksum.store(filepath, checksum.sort(localMap)); }
 				console.log("");
-				console.log("Summary");
+				console.log("Summary (" + filepath + ")");
 				console.log(" Folders: " + folderCnt);
 				console.log("   Files: " + fileCnt);
 				if(testMode) console.log("Test only. No changes were made.");
@@ -692,7 +692,7 @@ module.exports = {
 				}).then(function() {	// Finalize changes
 					if(changed && ! testMode) { checksum.store(root, checksum.sort(freshMap)); }
 					console.log("");
-					console.log("Summary");
+					console.log("Summary (" + filepath + ")");
 					console.log(" Scanned: " + folderCnt + " folder(s); " + fileCnt + " files(s)");
 					console.log("     Add: " + addFolderCnt + " folder(s); " + addFileCnt + " files(s)");
 					console.log("  Remove: " + removeFolderCnt + " folder(s); " + removeFileCnt + " files(s)");
@@ -752,7 +752,7 @@ module.exports = {
 					.then(function() {
 						// Fix timestamps on folders
 						Promise.all(folderList.map(self.stamp))
-						.then(function() { self.summary(FileCnt, TotalSize); })
+						.then(function() { self.summary(Home, FileCnt, TotalSize); })
 						;
 					});
 				})
