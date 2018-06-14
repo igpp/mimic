@@ -75,6 +75,20 @@ module.exports = {
 		return front + back;	
 	},
 
+	getRoot : function(filePath) {
+		var root = config.getRoot(filePath);
+		
+		// Test if under mimic management
+		if(root === undefined || root === null) {	// Not initialized
+			console.log("The folder '" + filePath + "' is not under Mimic management.");
+			console.log("To place it under Mimic management issue the command mimic-init in the folder.");
+			return null;
+		}
+		
+		return root;
+	},
+	
+
 	findRoot : function(filePath) {
 		var root = config.findRoot(filePath);
 		
@@ -139,7 +153,7 @@ module.exports = {
 				if( ! fs.existsSync(dirPath)) { 
 					fs.mkdirSync( dirPath ); 
 					fs.utimes( dirPath, timestamp, timestamp, (err) => { if(err) console.log(err); } ); 
-					if(Verbose) { console.log('Created: ' + dirPath); }
+					if(Verbose) { console.log(' Created: ' + dirPath); }
 				}	// Needs to happen now
 				resolve(checksumRec.path);
 			}
@@ -180,7 +194,7 @@ module.exports = {
 					if(Verbose && checksumRec.checksum) { // if no checksum is a blind (invisible) copy
 						var c = convert(length).from('b').toBest();
 						var bytes = commaNumber(+(Math.round(c.val + "e+2")  + "e-2")) + " " +  c.unit;
-						if(Verbose) console.log('Copied: ' + pathname + ' (' + bytes + ')'); 
+						if(Verbose) console.log('  Copied: ' + pathname + ' (' + bytes + ')'); 
 					}
 					if(modified) { 
 						var timestamp = new Date(modified);
@@ -207,7 +221,7 @@ module.exports = {
 					if(Verbose && checksumRec.checksum) {  // if no checksum is a blind (invisible) copy
 						var c = convert(length).from('b').toBest();
 						var bytes = commaNumber(+(Math.round(c.val + "e+2")  + "e-2")) + " " +  c.unit;
-						if(Verbose) console.log('Copied: ' + pathname + ' (' + bytes + ')'); 
+						if(Verbose) console.log('  Copied: ' + pathname + ' (' + bytes + ')'); 
 					}
 					if(modified) { 
 						var timestamp = new Date(modified);
@@ -234,7 +248,7 @@ module.exports = {
 					if(Verbose && checksumRec.checksum) {
 						var c = convert(length).from('b').toBest();
 						var bytes = commaNumber(+(Math.round(c.val + "e+2")  + "e-2")) + " " +  c.unit;
-						if(Verbose) console.log('Copied: ' + pathname + ' (' + bytes + ')'); 
+						if(Verbose) console.log('  Copied: ' + pathname + ' (' + bytes + ')'); 
 					}
 					if(modified) { 
 						var timestamp = new Date(modified);
@@ -460,20 +474,19 @@ module.exports = {
 	 * @throws Exception	if any error occurs.
 	 */
 	add : function(filepath, recurse, verbose, testMode) {
+		var self = this;
+		
 		// Global Variables
 		var folderCnt = 0;
 		var fileCnt = 0;
 
 		var changed = false;
 		
-		var root = config.findRoot(filepath);
+		var root = self.findRoot(filepath);
 		
 		// Test if under mimic management
 		if(root === undefined || root === null) {	// Not initialized
-			console.log("The folder '" + filepath + "' is not under Mimic management.");
-			console.log("To place it under Mimic management issue the command mimic-init");
-			console.log("in the folder or one of the parent folders.");
-			return found;
+			return;
 		}
 
 		// Load current list of files

@@ -44,7 +44,7 @@ var options  = yargs
 		// Add
 		'a' : {
 			alias: 'add',
-			describe : 'Add a collection to a the bundle. Use "*" to add all folders in current folder.',
+			describe : 'Add a collection to a the bundle. Use "+" to add all folders in current folder.',
 			type: 'string',
 			default: null
 		},
@@ -125,18 +125,22 @@ var main = function(args)
 	
 	// Process requests
 	if(options.add) {
-		if(options.verbose) console.log('   Adding: ' + options.add);
-		if(options.add === '*') {	// All folders
+		if(options.add === '+') {	// All folders
 			var files = fs.readdirSync('.');
 			for(let i = 0; i < files.length; i++) {
 				if(files[i].startsWith('.')) continue;	// Don't include hidden files
 				var stat = fs.statSync(files[i]);
-				if(stat.isDirectory()) { bundleList.push(bundle.createRecord(files[i])); }
+				if(stat.isDirectory()) { 
+					if(options.verbose) console.log('   Adding: ' + files[i]);
+					bundleList.push(bundle.createRecord(files[i]));
+					changed = true;
+				}
 			}
 		} else {	// One folder
+			if(options.verbose) console.log('   Adding: ' + options.add);
 			bundleList.push(bundle.createRecord(options.add));			
+			changed = true;
 		}
-		changed = true;
 	}
 	if(options.remove) {
 		if(options.verbose) console.log(' Removing: ' + options.remove);
@@ -166,21 +170,27 @@ var main = function(args)
 			for(var key in bundleList) {
 				var rec = bundleList[key];
 				if(options.verbose) { console.log('Refresh: ' + rec.path); }
-				mimic.refresh(key, options.quick, true, options.verbose, options.test)
+				if(mimic.getRoot(key) != null) {	// Folder is root for a mimic collection
+					mimic.refresh(key, options.quick, true, options.verbose, options.test)
+				}
 			}
 		}
 		if(options.perform == 'pull') {
 			for(var key in bundleList) {
 				var rec = bundleList[key];
 				if(options.verbose) { console.log('   Pull: ' + rec.path); }
-				mimic.syncPull(key, options.verbose);
+				if(mimic.getRoot(key) != null) {	// Folder is root for a mimic collection
+					mimic.syncPull(key, options.verbose);
+				}
 			}
 		}
 		if(options.perform == 'add') {
 			for(var key in bundleList) {
 				var rec = bundleList[key];
 				if(options.verbose) { console.log('    Add: ' + rec.path); }
-				mimic.add(key, true, options.verbose, options.test);
+				if(mimic.getRoot(key) != null) {	// Folder is root for a mimic collection
+					mimic.add(key, true, options.verbose, options.test);
+				}
 			}
 		}
 	}

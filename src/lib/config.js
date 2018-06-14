@@ -21,6 +21,25 @@ module.exports = {
 	BundleFile : MimicFolder + "/bundle",
 	
 	/**
+	 * Determine if a folder contains Mimic information and return the normalized path.
+	 * 
+	 * @return	normalized path to the folder if configured for Mimic, null if not.
+	 */
+	getRoot : function(basePath) {
+		var normPath = path.normalize(basePath);
+		if(normPath === ".") normPath = process.cwd();
+		if(normPath.substring(0, 2) === "..") normPath = path.normalize(Path.join(process.cwd(), normPath));
+		
+		if(fs.existsSync(path.join(normPath, this.MimicFolder))) { return basePath; }
+			
+		var testPath = path.normalize(path.join(normPath, this.MimicFolder));
+		
+		if(fs.existsSync(testPath)) return normPath;
+		
+		return null;	// Not using mimic
+	},
+
+	/**
 	 * Search for the root folder of a Mimic managed collection starting with the given folder.
 	 * 
 	 * The given directory will be searched for a Mimic folder. If one is not found, then the parent
@@ -38,6 +57,8 @@ module.exports = {
 		var testPath = path.normalize(path.join(normPath, this.MimicFolder));
 		
 		if(fs.existsSync(testPath)) return normPath;
+		
+		// Step up on level
 		var newPath = path.resolve(path.join(basePath, ".."));
 		if(normPath === newPath) return null;	// Reached top
 
