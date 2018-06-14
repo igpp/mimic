@@ -611,7 +611,8 @@ module.exports = {
 		try {
 			if(fs.statSync(filepath).isDirectory()) {	// Walk the tree		
 				walk(root, { filterFolders: includeFolders, filterFiles: includeFiles, recurse: recurse }, function(params, cb) {
-					var resourcePath = "./" + path.relative(root, path.join(filepath, params.path));	// Make relative to base
+					var realPath = path.join(filepath, params.path);
+					var resourcePath = "./" + path.relative(root, realPath);	// Make relative to base
 					resourcePath = config.canonicalPath(resourcePath);
 					var resourceInfo = localMap[resourcePath];
 					
@@ -629,13 +630,12 @@ module.exports = {
 							if(verbose || testMode) console.log("     New: " + resourcePath);
 							if( ! testMode) {	// Do it
 								freshMap[resourcePath] = checksum.createChecksumRecord(params.stat.size, params.stat.mtimeMs, 
-									checksum.getChecksumSync(resourcePath), resourcePath);
+									checksum.getChecksumSync(realPath), resourcePath);
 							}
 						}
 						changed = true;
 					} else {	// Existing - check profile
 						var ok = true;
-						var realPath = path.join(filepath, resourcePath);
 						var stat = fs.statSync(realPath);
 						
 						// Fix up state values
