@@ -8,6 +8,7 @@
  * Provided under the Apache License 2.0
  */
 const yargs = require('yargs');
+const fs = require('fs');
 
 // Mimic modules
 const config = require('./lib/config.js');
@@ -18,7 +19,7 @@ const mimic = require('./lib/mimic.js');
 var options  = yargs
 	.version('1.0.0')
 	.usage('Manage bundles of Mimic managed collection.')
-	.usage('mimic-add [args] files')
+	.usage('mimic-bundle [args] files')
 	.example('mimic-bundle -a example', 'add the collection "example" to the bundle')
 	.epilog("Development funded by NASA's VMO and PDS projects at UCLA\nand provided under the Apache License 2.0.")
 	.showHelpOnFail(false, "Specify --help for available options")
@@ -43,7 +44,7 @@ var options  = yargs
 		// Add
 		'a' : {
 			alias: 'add',
-			describe : 'Add a collection to a the bundle.',
+			describe : 'Add a collection to a the bundle. Use "*" to add all folders in current folder.',
 			type: 'string',
 			default: null
 		},
@@ -125,7 +126,16 @@ var main = function(args)
 	// Process requests
 	if(options.add) {
 		if(options.verbose) console.log('   Adding: ' + options.add);
-		bundleList.push(bundle.createRecord(options.add));
+		if(options.add === '*') {	// All folders
+			var files = fs.readdirSync('.');
+			for(let i = 0; i < files.length; i++) {
+				if(files[i].startsWith('.')) continue;	// Don't include hidden files
+				var stat = fs.statSync(files[i]);
+				if(stat.isDirectory()) { bundleList.push(bundle.createRecord(files[i])); }
+			}
+		} else {	// One folder
+			bundleList.push(bundle.createRecord(options.add));			
+		}
 		changed = true;
 	}
 	if(options.remove) {

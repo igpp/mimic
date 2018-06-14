@@ -11,6 +11,7 @@
   },
   "bin": {
     "mimic-add": "./src/add.js",
+    "mimic-bundle": "./src/bundle.js",
     "mimic-clone": "./src/clone.js",
     "mimic-config": "./src/config.js",
     "mimic-download": "./src/download.js",

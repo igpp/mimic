@@ -38,7 +38,7 @@ to share and copy the files.
 
 ## Tools
 
-Mimic also has a variety of tools for managing collections of files. Run the tool with no command-line 
+Mimic has a variety of tools for managing collections of files. Run the tool with no command-line 
 options to view information about available options.
 
 **mimic-add** : Add new files to the inventory of a Mimic managed collection.
