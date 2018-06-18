@@ -290,13 +290,24 @@ module.exports = {
 		try {
 			// Load SSH keyfile (cert)
 			self.Key = self.loadKey(username, keyfile);
-		
+
+			// Pull bundle file (if it exists)
+			try {
+				// var bundleFile = path.normalize(path.join(Home, config.BundleFile))
+				var bundleRec = checksum.createChecksumRecord(0, 0, 0, config.BundleFile);
+				await this.pullFrom(bundleRec);
+			} catch(reason) {
+				// ignore
+			}
+			
+			// Pull checksum file
+			var checksumFile = path.normalize(path.join(Home, config.ChecksumFile))
+			
 			// Create a temporary record to pull checksum file
 			var checksumRec = checksum.createChecksumRecord(0, 0, 0, config.ChecksumFile);
 			await this.pullFrom(checksumRec);
 			
 			// Load checksum
-			var checksumFile = path.normalize(path.join(Home, config.ChecksumFile))
 			var inventory = checksum.loadFrom(checksumFile);
 
 			// Separate files and folders

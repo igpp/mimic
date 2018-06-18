@@ -12,6 +12,7 @@ const yargs = require('yargs');
 
 // Mimic modules
 const config = require('./lib/config.js');
+const bundle = require('./lib/bundle.js');
 const mimic = require('./lib/mimic.js');
 
 // Configure the app
@@ -77,7 +78,9 @@ var main = function(args)
 		return;
 	}
 
-	mimic.syncWithPull(root, pullSettings.uri, pullSettings.username, pullSettings.keyfile, options.verbose);	
+	// Process main collection
+	mimic.syncWithPull(root, pullSettings.uri, pullSettings.username, pullSettings.keyfile, options.verbose);
+	
 }
 
 main(args);

@@ -120,7 +120,7 @@ var main = function(args)
 	}
 
 	var bundleList = bundle.load(root);
-	
+		
 	var changed = false;
 	
 	// Process requests

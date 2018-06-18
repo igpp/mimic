@@ -63,10 +63,12 @@ module.exports = {
 			// console.log('headers:', res.headers);
 
 			if(res.statusCode != 200) {
-				console.log('Unable to complete pull of "' + hostfile + '".');
+				/*
+				console.log('Unable to pull "' + hostfile + '".');
 				console.log('Reason: ' + res.statusMessage);
 				console.log('url: ' + this.joinURL(uri, hostfile));
-				return;
+				*/
+				callback(pathname, 0, 0);
 			}
 			var outStream = fs.createWriteStream(outFile)
 			.on('finish', function() {
@@ -78,11 +80,10 @@ module.exports = {
 			})
 			.on('end', function () {
 				outStream.end();
-				// callback(pathname, res.headers['content-length']);
 			})
 			;
 		}).on('error', (e) => {
-			console.error(e);
+			throw e;
 		});
 
 	},
@@ -93,13 +94,13 @@ module.exports = {
 		var c = new ftp();
 		c.on('ready', function() {
 			c.get(this.joinURL(hostpath, hostfile), function(err, stream) {
-				if (err) { console.error(e); callback(pathname, 0); }
+				if (err) { console.error(err); callback(pathname, 0, 0); }
 				stream.once('close', function() { c.end(); callback(pathname, 0, modified)});
 				stream.pipe(fs.createWriteStream(outFile));
 			});
 		});
 		
-		// connect to localhost:21 as anonymous
+		// connect to localhost:21 (ftp port) as anonymous
 		c.connect();
 	},
 
