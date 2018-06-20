@@ -373,7 +373,7 @@ module.exports = {
 			return;
 		}
 
-		this.syncWithPull(home, pullSettings.uri, pullSettings.username, pullSettings.keyfile, verbose);		
+		return this.syncWithPull(home, pullSettings.uri, pullSettings.username, pullSettings.keyfile, verbose);		
 	},
 	
 	syncWithPull : async function(home, uri, username, keyfile, verbose) {
@@ -383,99 +383,108 @@ module.exports = {
 		Baseurl = url.parse(uri);
 		Username = username;
 		Verbose = verbose;
-
-		var copyList = [];	// Entries to copy from remote
-		var deleteList = [];	// Entries to delete locally
-
-		try {
-			// Load SSH keyfile (cert)
-			self.Key = self.loadKey(username, keyfile);
-			
-			// Create a temporary record to pull checksum file - store in temporary file
-			var verbose = self.Verbose;
-			var checksumRec = checksum.createChecksumRecord(0, 0, 0, config.ChecksumFile);
-			var checksumTemp = path.normalize(path.join(home, config.ChecksumFile + ".tmp"));
-
-			await this.pullFrom(checksumRec, config.ChecksumFile + ".tmp");
-			var remoteInventory = checksum.loadFrom(checksumTemp);
-			
-			// Load checksum
-			var checksumFile = path.normalize(path.join(home, config.ChecksumFile))
-			var localInventory = checksum.loadFrom(checksumFile);
-
-			// Generate lists for copy and delete
-			var keys = Object.keys(remoteInventory);
-			for(var i = 0; i < keys.length; i++) {
-				var key = keys[i];
-				if( ! checksum.isEqual(remoteInventory[key], localInventory[key]) ) {
-					copyList[key] = remoteInventory[key];
-				}
-			}
-
-			// Determine files to remove
-			keys = Object.keys(localInventory);
-			for(var i = 0; i < keys.length; i++) {
-				var key = keys[i];
-				if( ! checksum.isEqual(localInventory[key], remoteInventory[key]) ) {
-					deleteList[key] = localInventory[key];
-				}
-			}
-
-			// Organize action to delete files.
-			var deleteAction = new Array();
-			keys = Object.keys(deleteList);
-			keys.reverse();	// Longest first means files first
-			for(var i = 0; i < keys.length; i++) {
-				deleteAction.push(deleteList[keys[i]]);
-			}
-	
-			// Separate files and folders to copy
-			var fileList = new Array();
-			var folderList = new Array();
-			var keys = Object.keys(copyList);
-			keys.sort();
-			for(var i = 0; i < keys.length; i++) {
-				var rec = copyList[keys[i]];
-				if( checksum.isDir(rec.checksum) ) { folderList.push(rec); }
-				else { fileList.push(rec); }
-			}
 		
-			// Remove files, create folders then copy files
-			Promise.all(deleteAction.map(self.deleteRec))
-				.then(function() {	// Create folders
-					Promise.all(folderList.map(self.createFolder))
-						.then(function() {	// Copy files
-							var action = null;
-							if(Baseurl.protocol == 'http:' || Baseurl.protocol == 'https:') { 
-								action = self.pullFromHttps;
-							}
-							if(Baseurl.protocol == 'scp:') { 
-								action = self.pullFromScp;
-							}
-							if(Baseurl.protocol == 'ftp:') {
-								action = self.pullFromFtp;
-							}
+		// Reset counts
+		FileCnt = 0;
+		TotalSize = 0;
+		RemovedCnt = 0;
 
-							Promise.all(fileList.map(action))
-								.then(function() { // Fix timestamps on folders
-									Promise.all(folderList.map(self.stamp))
-									.then(function() { 
-										checksum.store(home, remoteInventory);
-										fs.unlinkSync(checksumTemp);	// Remove temp file
-										self.summary(Home, FileCnt, TotalSize, RemovedCnt); 
-									})
-									;
+		return new Promise(async function(resolve, reject) {
+			var copyList = [];	// Entries to copy from remote
+			var deleteList = [];	// Entries to delete locally
+
+			try {
+				// Load SSH keyfile (cert)
+				self.Key = self.loadKey(username, keyfile);
+				
+				// Create a temporary record to pull checksum file - store in temporary file
+				var verbose = self.Verbose;
+				var checksumRec = checksum.createChecksumRecord(0, 0, 0, config.ChecksumFile);
+				var checksumTemp = path.normalize(path.join(home, config.ChecksumFile + ".tmp"));
+
+				await self.pullFrom(checksumRec, config.ChecksumFile + ".tmp");
+				var remoteInventory = checksum.loadFrom(checksumTemp);
+				
+				// Load checksum
+				var checksumFile = path.normalize(path.join(home, config.ChecksumFile))
+				var localInventory = checksum.loadFrom(checksumFile);
+
+				// Generate lists for copy and delete
+				var keys = Object.keys(remoteInventory);
+				for(var i = 0; i < keys.length; i++) {
+					var key = keys[i];
+					if( ! checksum.isEqual(remoteInventory[key], localInventory[key]) ) {
+						copyList[key] = remoteInventory[key];
+					}
+				}
+
+				// Determine files to remove
+				keys = Object.keys(localInventory);
+				for(var i = 0; i < keys.length; i++) {
+					var key = keys[i];
+					if( ! checksum.isEqual(localInventory[key], remoteInventory[key]) ) {
+						deleteList[key] = localInventory[key];
+					}
+				}
+
+				// Organize action to delete files.
+				var deleteAction = new Array();
+				keys = Object.keys(deleteList);
+				keys.reverse();	// Longest first means files first
+				for(var i = 0; i < keys.length; i++) {
+					deleteAction.push(deleteList[keys[i]]);
+				}
+		
+				// Separate files and folders to copy
+				var fileList = new Array();
+				var folderList = new Array();
+				var keys = Object.keys(copyList);
+				keys.sort();
+				for(var i = 0; i < keys.length; i++) {
+					var rec = copyList[keys[i]];
+					if( checksum.isDir(rec.checksum) ) { folderList.push(rec); }
+					else { fileList.push(rec); }
+				}
+			
+				// Remove files, create folders then copy files
+				Promise.all(deleteAction.map(self.deleteRec))
+					.then(function() {	// Create folders
+						Promise.all(folderList.map(self.createFolder))
+							.then(function() {	// Copy files
+								var action = null;
+								if(Baseurl.protocol == 'http:' || Baseurl.protocol == 'https:') { 
+									action = self.pullFromHttps;
 								}
-							)
-						}
-					)
-				})
-				.catch(reason => { console.log(reason.message); if(Verbose) { console.log(reason); } })
-				;
-		} catch(reason) {
-			console.log(reason.message);
-			if(Verbose) { console.log(reason); }
-		}
+								if(Baseurl.protocol == 'scp:') { 
+									action = self.pullFromScp;
+								}
+								if(Baseurl.protocol == 'ftp:') {
+									action = self.pullFromFtp;
+								}
+
+								Promise.all(fileList.map(action))
+									.then(function() { // Fix timestamps on folders
+										Promise.all(folderList.map(self.stamp))
+										.then(function() { 
+											checksum.store(home, remoteInventory);
+											fs.unlinkSync(checksumTemp);	// Remove temp file
+											self.summary(Home, FileCnt, TotalSize, RemovedCnt); 
+											resolve(home);
+										})
+										;
+									}
+								)
+							}
+						)
+					})
+					.catch(reason => { console.log(reason.message); if(Verbose) { console.log(reason); } reject(reason); })
+					;
+			} catch(reason) {
+				console.log(reason.message);
+				if(Verbose) { console.log(reason); }
+				reject(reason);
+			}
+		});
 	},
 
 	/** 
@@ -493,88 +502,95 @@ module.exports = {
 	add : function(filepath, recurse, verbose, testMode) {
 		var self = this;
 		
-		// Global Variables
-		var folderCnt = 0;
-		var fileCnt = 0;
+		return new Promise(async function(resolve, reject) {
+			// Global Variables
+			var folderCnt = 0;
+			var fileCnt = 0;
 
-		var changed = false;
+			var changed = false;
 		
-		var root = self.findRoot(filepath);
-		
-		// Test if under mimic management
-		if(root === undefined || root === null) {	// Not initialized
-			return;
-		}
+			var root = self.findRoot(filepath);
+			
+			// Test if under mimic management
+			if(root === undefined || root === null) {	// Not initialized
+				resolve(filepath);
+			}
 
-		// Load current list of files
-		var localMap = checksum.load(filepath);
+			// Load current list of files
+			var localMap = checksum.load(filepath);
 
-		// var out = fs.createWriteStream(checksumPath, {flags: "a"});
-		
-		if(verbose) { console.log('Start scan'); }
-		// found = scan(out, root, localMap, filepath);
-		// var regex = new RegExp('/' + options.ext + '$/');	// Ends with extension
-		
-		var includeFolders = /(^[.]$|^[^.])/; //  ignore folders starting with ., except for '.' (current directory)
-		var includeFiles = /^.*$/;	// Everything
+			// var out = fs.createWriteStream(checksumPath, {flags: "a"});
+			
+			if(verbose) { console.log('Start scan'); }
+			// found = scan(out, root, localMap, filepath);
+			// var regex = new RegExp('/' + options.ext + '$/');	// Ends with extension
+			
+			var includeFolders = /(^[.]$|^[^.])/; //  ignore folders starting with ., except for '.' (current directory)
+			var includeFiles = /^.*$/;	// Everything
 
-		try {
-			var stat = fs.statSync(filepath);
-			if(stat.isDirectory()) {	// Walk the tree		
-				walk(root, { filterFolders: includeFolders, filterFiles: includeFiles, recurse: recurse }, function(params, cb) {
-					var resourcePath = "./" + path.relative(root, path.join(filepath, params.path));	// Make relative to base
-					resourcePath = config.canonicalPath(resourcePath);
-					if(typeof localMap[resourcePath] === 'undefined') {	// new add to list
-						if(params.directory) {	// Folder
-							folderCnt++;
-							if(verbose) console.log("     New: " + resourcePath);
-							if( ! testMode) {
-								// checksum.writeChecksumRecord(out, 0, params.stat.mtimeMs, checksum.DirDigest, resourcePath);
-								localMap[resourcePath] = checksum.createChecksumRecord(0, params.stat.mtimeMs, 
-									checksum.DirDigest, resourcePath);
-								changed = true;
+			try {
+				var stat = fs.statSync(filepath);
+				if(stat.isDirectory()) {	// Walk the tree		
+					walk(root, { filterFolders: includeFolders, filterFiles: includeFiles, recurse: recurse }, function(params, cb) {
+						var resourcePath = "./" + path.relative(root, path.join(filepath, params.path));	// Make relative to base
+						resourcePath = config.canonicalPath(resourcePath);
+						if(typeof localMap[resourcePath] === 'undefined') {	// new add to list
+							if(params.directory) {	// Folder
+								folderCnt++;
+								if(verbose) console.log("     New: " + resourcePath);
+								if( ! testMode) {
+									// checksum.writeChecksumRecord(out, 0, params.stat.mtimeMs, checksum.DirDigest, resourcePath);
+									localMap[resourcePath] = checksum.createChecksumRecord(0, params.stat.mtimeMs, 
+										checksum.DirDigest, resourcePath);
+									changed = true;
+								}
+							} else {	// File
+								fileCnt++;
+								if(verbose) console.log("     New: " + resourcePath);
+								if( ! testMode) {
+									// checksum.writeFileChecksum(out, params.stat.size, params.stat.mtimeMs, resourcePath);
+									localMap[resourcePath] = checksum.createChecksumRecord(params.stat.size, params.stat.mtimeMs, 
+										checksum.getChecksumSync(resourcePath), resourcePath);
+									changed = true;
+								}
 							}
-						} else {	// File
-							fileCnt++;
-							if(verbose) console.log("     New: " + resourcePath);
-							if( ! testMode) {
-								// checksum.writeFileChecksum(out, params.stat.size, params.stat.mtimeMs, resourcePath);
-								localMap[resourcePath] = checksum.createChecksumRecord(params.stat.size, params.stat.mtimeMs, 
-									checksum.getChecksumSync(resourcePath), resourcePath);
-								changed = true;
-							}
+						}				
+						cb();
+					}).then(function() {
+						if(changed && ! testMode) { checksum.store(filepath, checksum.sort(localMap)); }
+						console.log("");
+						console.log("Summary (" + filepath + ")");
+						console.log(" Folders: " + commaNumber(folderCnt));
+						console.log("   Files: " + commaNumber(fileCnt));
+						console.log("");
+						if(testMode) console.log("Test only. No changes were made.");
+						resolve(filepath);
+					});
+				} else {	// Single file
+					if(localMap[filepath] === undefined) {
+						fileCnt++;
+						if(verbose) console.log("     New: " + resourcePath);
+						if( ! testMode) {
+							localMap[resourcePath] = checksum.createChecksumRecord(stat.size, stat.mtimeMs, 
+								checksum.getChecksumSync(resourcePath), resourcePath);
+							changed = true;
 						}
-					}				
-					cb();
-				}).then(function() {
+					}
 					if(changed && ! testMode) { checksum.store(filepath, checksum.sort(localMap)); }
 					console.log("");
-					console.log("Summary");
-					console.log(" Folders: " + folderCnt);
-					console.log("   Files: " + fileCnt);
+					console.log("Summary (" + filepath + ")");
+					console.log(" Folders: " + commaNumber(folderCnt));
+					console.log("   Files: " + commaNumber(fileCnt));
+					console.log("");
 					if(testMode) console.log("Test only. No changes were made.");
-				});
-			} else {	// Single file
-				if(localMap[filepath] === undefined) {
-					fileCnt++;
-					if(verbose) console.log("     New: " + resourcePath);
-					if( ! testMode) {
-						localMap[resourcePath] = checksum.createChecksumRecord(stat.size, stat.mtimeMs, 
-							checksum.getChecksumSync(resourcePath), resourcePath);
-						changed = true;
-					}
+					resolve(filepath);
 				}
-				if(changed && ! testMode) { checksum.store(filepath, checksum.sort(localMap)); }
-				console.log("");
-				console.log("Summary (" + filepath + ")");
-				console.log(" Folders: " + folderCnt);
-				console.log("   Files: " + fileCnt);
-				if(testMode) console.log("Test only. No changes were made.");
+			} catch(reason) {
+				console.log(reason.message);
+				if(Verbose) { console.log(reason); }
+				reject(reason);
 			}
-		} catch(reason) {
-			console.log(reason.message);
-			if(Verbose) { console.log(reason); }
-		}
+		});
 	},
 	
 	/** 
@@ -592,139 +608,145 @@ module.exports = {
 	refresh : function(filepath, quick, recurse, verbose, testMode) {
 		var self = this;
 		
-		// Global Variables
-		var folderCnt = 0;
-		var fileCnt = 0;
-		var addFolderCnt = 0;
-		var addFileCnt = 0;
-		var removeFolderCnt = 0;
-		var removeFileCnt = 0;
-		var updateFolderCnt = 0;
-		var updateFileCnt = 0;	
-		
-		var changed = false;
-		
-		var root = self.findRoot(filepath);
-		
-		// Test if under mimic management
-		if(root === undefined || root === null) {	// Not initialized
-			return;
-		}
-		
-		if(verbose && ( ! quick)) {
-			console.log("Inspecting checksums can take a while.");
-			console.log("Consider using the quick (-q) option for faster processing.");
-		}
+		return new Promise(async function(resolve, reject) {
+			// Global Variables
+			var folderCnt = 0;
+			var fileCnt = 0;
+			var addFolderCnt = 0;
+			var addFileCnt = 0;
+			var removeFolderCnt = 0;
+			var removeFileCnt = 0;
+			var updateFolderCnt = 0;
+			var updateFileCnt = 0;	
+			
+			var changed = false;
+			
+			var root = self.findRoot(filepath);
+			
+			// Test if under mimic management
+			if(root === undefined || root === null) {	// Not initialized
+				resolve(filepath);
+			}
+			
+			if(verbose && ( ! quick)) {
+				console.log("Inspecting checksums can take a while.");
+				console.log("Consider using the quick (-q) option for faster processing.");
+			}
 	
-		// Load current list of files
-		var localMap = checksum.load(filepath);
-		if(verbose) { var keys = Object.keys(localMap); console.log("Checking: " + commaNumber(keys.length) + " file(s)"); }
+			// Load current list of files
+			var localMap = checksum.load(filepath);
+			if(verbose) { var keys = Object.keys(localMap); console.log("Checking: " + commaNumber(keys.length) + " file(s)"); }
 
-		var freshMap = [];
-		
-		var includeFolders = /(^[.]$|^[^.])/; //  ignore folders starting with ., except for '.' (current directory)
-		var includeFiles = /^.*$/;	// Everything
+			var freshMap = [];
+			
+			var includeFolders = /(^[.]$|^[^.])/; //  ignore folders starting with ., except for '.' (current directory)
+			var includeFiles = /^.*$/;	// Everything
 
-		try {
-			if(fs.statSync(filepath).isDirectory()) {	// Walk the tree		
-				walk(root, { filterFolders: includeFolders, filterFiles: includeFiles, recurse: recurse }, function(params, cb) {
-					var realPath = path.join(filepath, params.path);
-					var resourcePath = "./" + path.relative(root, realPath);	// Make relative to base
-					resourcePath = config.canonicalPath(resourcePath);
-					var resourceInfo = localMap[resourcePath];
-					
-					if(params.directory) { folderCnt++; } else { fileCnt++; }
-
-					if(typeof resourceInfo === 'undefined') {	// new - add to list
-						if(params.directory) {
-							addFolderCnt++;
-							if(verbose || testMode) console.log("     New: " + resourcePath);
-							if( ! testMode) {	// Do it
-								freshMap[resourcePath] = checksum.createChecksumRecord(0, params.stat.mtimeMs, checksum.DirDigest, resourcePath);
-							}
-						} else {
-							addFileCnt++;
-							if(verbose || testMode) console.log("     New: " + resourcePath);
-							if( ! testMode) {	// Do it
-								freshMap[resourcePath] = checksum.createChecksumRecord(params.stat.size, params.stat.mtimeMs, 
-									checksum.getChecksumSync(realPath), resourcePath);
-							}
-						}
-						changed = true;
-					} else {	// Existing - check profile
-						var ok = true;
-						var stat = fs.statSync(realPath);
+			try {
+				if(fs.statSync(filepath).isDirectory()) {	// Walk the tree		
+					walk(root, { filterFolders: includeFolders, filterFiles: includeFiles, recurse: recurse }, function(params, cb) {
+						var realPath = path.join(filepath, params.path);
+						var resourcePath = "./" + path.relative(root, realPath);	// Make relative to base
+						resourcePath = config.canonicalPath(resourcePath);
+						var resourceInfo = localMap[resourcePath];
 						
-						// Fix up state values
-						if(params.directory) { stat.size = 0; }	// Folders do have a size, but we make it 0 for the inventory
-						var statMod = Math.floor(stat.mtimeMs); // stat.mtimeMs includes fractional ms
-						
-						if(resourceInfo.modified != statMod || resourceInfo.length != stat.size) {
+						if(params.directory) { folderCnt++; } else { fileCnt++; }
+
+						if(typeof resourceInfo === 'undefined') {	// new - add to list
 							if(params.directory) {
-								updateFolderCnt++;
+								addFolderCnt++;
+								if(verbose || testMode) console.log("     New: " + resourcePath);
+								if( ! testMode) {	// Do it
+									freshMap[resourcePath] = checksum.createChecksumRecord(0, params.stat.mtimeMs, checksum.DirDigest, resourcePath);
+								}
 							} else {
-								updateFileCnt++;
-							}
-							if(verbose) {
-								if(verbose || testMode) console.log("   Update: " + resourcePath);
-							}
-							if( ! testMode) { // Update info
-								resourceInfo.modified = stat.mtimeMs;
-								resourceInfo.length = stat.size;
-							}	
-							changed = true;	ok = false;					
-						}
-						if( ! quick ) {	// Check checksum
-							if( ! params.directory) {	// Only do files
-								var hash = checksum.getChecksumSync(realPath);
-								if(resourceInfo.checksum !== hash) {
-									updateFileCnt++;
-									if(verbose) {
-										console.log("   Update: " + resourcePath);
-									}
-									if( ! testMode) { // Do it
-										resourceInfo.checksum = hash;
-									}
-									changed = true; ok = false;
+								addFileCnt++;
+								if(verbose || testMode) console.log("     New: " + resourcePath);
+								if( ! testMode) {	// Do it
+									freshMap[resourcePath] = checksum.createChecksumRecord(params.stat.size, params.stat.mtimeMs, 
+										checksum.getChecksumSync(realPath), resourcePath);
 								}
 							}
-						}
-						freshMap[resourcePath] = resourceInfo;
-						if(verbose && ok && testMode == 2) { // Status reporting
-							console.log("       OK: " + resourcePath);
-						}
-					}			
-					cb();
-				}).then(function() {	// Determine which files were removed
-					var keys = Object.keys(localMap);
-					for(var i = 0; i < keys.length; i++) {
-						var resourcePath = keys[i];
-						if(typeof freshMap[resourcePath] === 'undefined') {	// removed
-							if(verbose || testMode) { console.log("   Remove: " + resourcePath); }
-							if( checksum.isDir(localMap[resourcePath].checksum) ) { removeFolderCnt++; }
-							else { removeFileCnt++; }
 							changed = true;
+						} else {	// Existing - check profile
+							var ok = true;
+							var stat = fs.statSync(realPath);
+							
+							// Fix up state values
+							if(params.directory) { stat.size = 0; }	// Folders do have a size, but we make it 0 for the inventory
+							var statMod = Math.floor(stat.mtimeMs); // stat.mtimeMs includes fractional ms
+							
+							if(resourceInfo.modified != statMod || resourceInfo.length != stat.size) {
+								if(params.directory) {
+									updateFolderCnt++;
+								} else {
+									updateFileCnt++;
+								}
+								if(verbose) {
+									if(verbose || testMode) console.log("   Update: " + resourcePath);
+								}
+								if( ! testMode) { // Update info
+									resourceInfo.modified = stat.mtimeMs;
+									resourceInfo.length = stat.size;
+								}	
+								changed = true;	ok = false;					
+							}
+							if( ! quick ) {	// Check checksum
+								if( ! params.directory) {	// Only do files
+									var hash = checksum.getChecksumSync(realPath);
+									if(resourceInfo.checksum !== hash) {
+										updateFileCnt++;
+										if(verbose) {
+											console.log("   Update: " + resourcePath);
+										}
+										if( ! testMode) { // Do it
+											resourceInfo.checksum = hash;
+										}
+										changed = true; ok = false;
+									}
+								}
+							}
+							freshMap[resourcePath] = resourceInfo;
+							if(verbose && ok && testMode == 2) { // Status reporting
+								console.log("       OK: " + resourcePath);
+							}
+						}			
+						cb();
+					}).then(function() {	// Determine which files were removed
+						var keys = Object.keys(localMap);
+						for(var i = 0; i < keys.length; i++) {
+							var resourcePath = keys[i];
+							if(typeof freshMap[resourcePath] === 'undefined') {	// removed
+								if(verbose || testMode) { console.log("   Remove: " + resourcePath); }
+								if( checksum.isDir(localMap[resourcePath].checksum) ) { removeFolderCnt++; }
+								else { removeFileCnt++; }
+								changed = true;
+							}
 						}
-					}
-				}).then(function() {	// Finalize changes
-					if(changed && ! testMode) { checksum.store(root, checksum.sort(freshMap)); }
-					console.log("");
-					console.log("Summary (" + filepath + ")");
-					console.log(" Scanned: " + folderCnt + " folder(s); " + fileCnt + " files(s)");
-					console.log("     Add: " + addFolderCnt + " folder(s); " + addFileCnt + " files(s)");
-					console.log("  Remove: " + removeFolderCnt + " folder(s); " + removeFileCnt + " files(s)");
-					console.log("  Update: " + updateFolderCnt + " folder(s); " + updateFileCnt + " files(s)");
-					if(testMode) {
-						if(testMode != 2) { console.log("Test only. No changes were made."); }
-					}
-				});
-			} else {	// Single file
-				console.log('Only mimic collections can be refreshed.');
+					}).then(function() {	// Finalize changes
+						if(changed && ! testMode) { checksum.store(root, checksum.sort(freshMap)); }
+						console.log("");
+						console.log("Summary (" + filepath + ")");
+						console.log(" Scanned: " + commaNumber(folderCnt) + " folder(s); " + commaNumber(fileCnt) + " files(s)");
+						console.log("     Add: " + commaNumber(addFolderCnt) + " folder(s); " + commaNumber(addFileCnt) + " files(s)");
+						console.log("  Remove: " + commaNumber(removeFolderCnt) + " folder(s); " + commaNumber(removeFileCnt) + " files(s)");
+						console.log("  Update: " + commaNumber(updateFolderCnt) + " folder(s); " + commaNumber(updateFileCnt) + " files(s)");
+						console.log("");
+						if(testMode) {
+							if(testMode != 2) { console.log("Test only. No changes were made."); }
+						}
+						resolve(filepath);
+					});
+				} else {	// Single file
+					console.log('Only mimic collections can be refreshed.');
+					resolve(filepath);
+				}
+			} catch(reason) {
+				console.log(reason.message);
+				if(Verbose) { console.log(reason); }
+				reject(reason);
 			}
-		} catch(reason) {
-			console.log(reason.message);
-			if(Verbose) { console.log(reason); }
-		}
+		});
 	},	
 
 	download : async function(home, uri, inventory, username, keyfile, verbose) {

@@ -294,33 +294,45 @@ var main = async function(args)
 	}
 	
 	// Perform tasks
-	if(options.perform) {		
+	if(options.perform) {
+		// Create array of bundle list
+		var bundleArray = [];
+		var keys = Object.keys(bundleList);
+		for(var i = 0; i < keys.length; i++) {
+			var rec = bundleList[keys[i]];
+			bundleArray.push(rec);
+		}
+					
+		// Do task
 		if(options.perform == 'refresh') {
-			for(var key in bundleList) {
-				var rec = bundleList[key];
+			// Use for() on keys to do task in series.
+			for(var i = 0; i < bundleArray.length; i++) {
+				var rec = bundleArray[i];
 				if(options.verbose) { console.log('Refresh: ' + rec.path); }
-				if(mimic.getRoot(key) != null) {	// Folder is root for a mimic collection
-					mimic.refresh(key, options.quick, true, options.verbose, options.test)
+				if(mimic.getRoot(rec.path) != null) {	// Folder is root for a mimic collection
+					await mimic.refresh(path.join(filePath, rec.path), options.quick, true, options.verbose, options.test)
 				}
 			}
 		}
 		
 		if(options.perform == 'pull') {
-			for(var key in bundleList) {
-				var rec = bundleList[key];
+			// Use for() on keys to do task in series.
+			for(var i = 0; i < bundleArray.length; i++) {
+				var rec = bundleArray[i];
 				if(options.verbose) { console.log('   Pull: ' + rec.path); }
-				if(mimic.getRoot(key) != null) {	// Folder is root for a mimic collection
-					mimic.syncPull(key, options.verbose);
+				if(mimic.getRoot(rec.path) != null) {	// Folder is root for a mimic collection
+					await mimic.syncPull(path.join(filePath, rec.path), options.verbose);
 				}
 			}
 		}
 		
 		if(options.perform == 'add') {
-			for(var key in bundleList) {
-				var rec = bundleList[key];
+			// Use for() on keys to do task in series.
+			for(var i = 0; i < bundleArray.length; i++) {
+				var rec = bundleArray[i];
 				if(options.verbose) { console.log('    Add: ' + rec.path); }
-				if(mimic.getRoot(key) != null) {	// Folder is root for a mimic collection
-					mimic.add(key, true, options.verbose, options.test);
+				if(mimic.getRoot(rec.path) != null) {	// Folder is root for a mimic collection
+					await mimic.add(path.join(filePath, rec.path), true, options.verbose, options.test);
 				}
 			}
 		}
