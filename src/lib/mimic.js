@@ -40,7 +40,7 @@ module.exports = {
 		// Create destination folder - if it doesn't exist
 		if( pathname != path.normalize(path.basename(pathname))) {
 			console.log("Destination must a folder name and cannot include a path.");
-			return;
+			return false;
 		}
 		
 		if( ! fs.existsSync(pathname)) {
@@ -225,7 +225,13 @@ module.exports = {
 					}
 					if(modified) { 
 						var timestamp = new Date(modified);
-						fs.utimes( path.normalize( path.join(Home, pathname) ), timestamp, timestamp, (err) => { if(err) console.log(err); } ); 
+						fs.utimes( path.normalize( path.join(Home, pathname) ), timestamp, timestamp, (err) => { 
+							if(err) {
+								console.log(err.message);
+								console.log("File may not exist at the remote location.");
+								if(Verbose) console.log(err);
+							}
+						} ); 
 					}
 					if(checksumRec.checksum) {	// Count it - otherwise a blind (invisible) copy
 						FileCnt++; 

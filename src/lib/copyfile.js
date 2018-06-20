@@ -6,12 +6,23 @@
  * Provided under the Apache License 2.0
  */
  
-const fs = require('fs');
+// const fs = require('fs');
+const fs = require('graceful-fs');	// Manages fs read/write queues and avoids too many opened files.
 const path = require('path');
 const https = require('https');
 const ftp = require('ftp');
 const scp2 = require('scp2');
 const url = require('url');
+
+// const keepAliveAgent = new HttpsAgent();
+
+const keepAliveAgent = new https.Agent({
+  keepAlive: true, 
+  keepAliveMsecs: 10000, // free socket keepalive for 10 seconds
+  maxSockets: 256,
+  maxFreeSockets: 256
+});
+
 
 // Mimic configuration information
 const config = require('./config.js');
@@ -56,13 +67,26 @@ module.exports = {
 	},
 
 	pullHttps : function(root, pathname, hostfile, uri, modified, callback) {
-		var outFile = path.normalize(path.join(root, pathname))
+		var outFile = path.normalize(path.join(root, pathname));
+		var urlParsed = url.parse(this.joinURL(uri, hostfile));
+		
+		// Construct options so we can pass "agent:false" to disable connection pooling
+		if(urlParsed.port == null) { urlParsed.port = 80; if(urlParsed.protocol == "https:") { urlParsed.port = 443; } }
+		
+		var options = { 
+			agent: keepAliveAgent, 
+			method: 'GET', 
+			protocol: 'https:',
+			// port: urlParsed.port, 
+			hostname: urlParsed.hostname, 
+			path: urlParsed.pathname
+			};
 
-		https.get(this.joinURL(uri, hostfile), (res) => {
+		https.get(options, (response) => {
 			// console.log('statusCode:', res.statusCode);
 			// console.log('headers:', res.headers);
 
-			if(res.statusCode != 200) {
+			if(response.statusCode != 200) {
 				/*
 				console.log('Unable to pull "' + hostfile + '".');
 				console.log('Reason: ' + res.statusMessage);
@@ -70,20 +94,26 @@ module.exports = {
 				*/
 				callback(pathname, 0, 0);
 			}
+			
+			// Create output stream
 			var outStream = fs.createWriteStream(outFile)
-			.on('finish', function() {
-				callback(pathname, parseInt(res.headers['content-length']), modified);
-			});
-			res
+				.on('finish', function() {
+					callback(pathname, parseInt(response.headers['content-length']), modified);
+				});
+			
+			// Process response from HTTPS request
+			response
 			.on('data', (d) => {
 				outStream.write(d);
 			})
 			.on('end', function () {
-				outStream.end();
+				outStream.end();				
 			})
 			;
 		}).on('error', (e) => {
-			throw e;
+			console.log("   Error: " + e.message);
+			callback(pathname, 0, 0);
+			// throw e;
 		});
 
 	},
