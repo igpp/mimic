@@ -65,3 +65,4 @@ test/prune-test
 test/pull-test
 test/refresh-test
 test/bundle-test
+test/bundle-test-2

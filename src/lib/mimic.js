@@ -35,21 +35,25 @@ var RemovedCnt = 0;
 //Public interface
 module.exports = {	
 	init : function(pathname) {
+		var self = module.exports;
+		
 		var mimicPath = path.normalize(path.join(pathname, config.MimicFolder))
 		
 		// Create destination folder - if it doesn't exist
+		/*
 		if( pathname != path.normalize(path.basename(pathname))) {
 			console.log("Destination must a folder name and cannot include a path.");
 			return false;
 		}
+		*/
 		
 		if( ! fs.existsSync(pathname)) {
-			fs.mkdirSync(pathname);
+			self.mkPath(pathname);
 		}
 		
 		// Create hidden ".mimic" folder if one does not exist.
 		if( ! fs.existsSync(mimicPath)) {
-			fs.mkdirSync(mimicPath);
+			self.mkPath(mimicPath);
 		} else {
 			console.log('Folder already initialized for use with mimic.');
 			return false;
@@ -146,12 +150,14 @@ module.exports = {
 	
 	// Create a folder
 	createFolder : function(checksumRec) {
+		var self = module.exports;
+		
 		return new Promise(function(resolve, reject) {
 			if( checksum.isDir(checksumRec.checksum) ) {
 				var dirPath = path.normalize( path.join(Home, checksumRec.path) );
 				var timestamp = new Date(checksumRec.modified);
 				if( ! fs.existsSync(dirPath)) { 
-					fs.mkdirSync( dirPath ); 
+					self.mkPath( dirPath ); 
 					fs.utimes( dirPath, timestamp, timestamp, (err) => { if(err) console.log(err); } ); 
 					if(Verbose) { console.log(' Created: ' + dirPath); }
 				}	// Needs to happen now
@@ -161,6 +167,17 @@ module.exports = {
 		);
 	},
 
+	mkPath : function(folderPath) {
+		if( ! fs.existsSync(folderPath)) { 
+			var folderName = "";
+			var pathSplit = folderPath.split('/');
+			for (var index = 0; index < pathSplit.length; index++) {
+                folderName = path.join(folderName, pathSplit[index]);
+                if ( ! fs.existsSync(folderName)) { fs.mkdirSync(folderName); }
+            }
+		}
+	},
+	
 	/** 
 	Remove file associated with a checksum record.
 	 **/
@@ -287,6 +304,7 @@ module.exports = {
 
 	pull : async function(home, uri, username, keyfile, verbose) {
 		var self = this;
+		var thisHome = home;
 		
 		Home = home;
 		Baseurl = url.parse(uri);
@@ -346,7 +364,7 @@ module.exports = {
 					.then(function() {
 						// Fix timestamps on folders
 						Promise.all(folderList.map(self.stamp))
-						.then(function() { self.summary(Home, FileCnt, TotalSize); })
+						.then(function() { self.summary(thisHome, FileCnt, TotalSize); })
 						;
 					});
 				})

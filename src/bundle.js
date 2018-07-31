@@ -73,14 +73,6 @@ var options  = yargs
 			type: 'string',
 			choices: ['refresh', 'pull', 'add', 'clone'],
 		},
-	
-		// Test run
-		't' : {
-			alias: 'test',
-			describe : 'Run in test mode, do not update any files.',
-			type: 'boolean',
-			default: false
-		},
 
 		// Quick
 		'q' : {
@@ -179,6 +171,8 @@ var main = async function(args)
 			
 			// Create clone
 			try {
+				clone(filePath, direction, options);
+				/*
 				mimic.pull(filePath, options.uri, options.username, options.keyfile, options.verbose) 
 				.then(async function(result) {
 					// Prepare for general processing
@@ -226,10 +220,11 @@ var main = async function(args)
 						config.store(collectionPath, info);
 							
 						// Create clone
-						await mimic.pull(collectionPath, uri, options.username, options.keyfile, options.verbose);
+						mimic.pull(collectionPath, uri, options.username, options.keyfile, options.verbose);
 					}
 				}
 				);
+				*/
 			} catch(reason) {
 				console.log(reason.message);
 				if(options.verbose) { console.log(reason); }
@@ -305,6 +300,8 @@ var main = async function(args)
 					
 		// Do task
 		if(options.perform == 'refresh') {
+			refresh(filePath, bundleArray, options);
+			/*
 			// Use for() on keys to do task in series.
 			for(var i = 0; i < bundleArray.length; i++) {
 				var rec = bundleArray[i];
@@ -313,9 +310,12 @@ var main = async function(args)
 					await mimic.refresh(path.join(filePath, rec.path), options.quick, true, options.verbose, options.test)
 				}
 			}
+			*/
 		}
 		
 		if(options.perform == 'pull') {
+			pull(filePath, bundleArray, options);
+			/*
 			// Use for() on keys to do task in series.
 			for(var i = 0; i < bundleArray.length; i++) {
 				var rec = bundleArray[i];
@@ -324,9 +324,12 @@ var main = async function(args)
 					await mimic.syncPull(path.join(filePath, rec.path), options.verbose);
 				}
 			}
+			*/
 		}
 		
 		if(options.perform == 'add') {
+			add(filePath, bundleArray, options);
+			/*
 			// Use for() on keys to do task in series.
 			for(var i = 0; i < bundleArray.length; i++) {
 				var rec = bundleArray[i];
@@ -335,9 +338,155 @@ var main = async function(args)
 					await mimic.add(path.join(filePath, rec.path), true, options.verbose, options.test);
 				}
 			}
+			*/
 		}
 	}
 	if(options.test) { console.log("Test mode: No changes have been made."); }
+}
+
+var clone = function(filePath, direction, options) {
+	console.log('Clone: ' + filePath);
+	try {
+		mimic.pull(filePath, options.uri, options.username, options.keyfile, options.verbose) 
+		.then(async function(result) {
+			// Prepare for general processing
+			cloneBundle(filePath, direction, options);
+		}
+		);
+	} catch(reason) {
+		console.log(reason.message);
+		if(options.verbose) { console.log(reason); }
+	}
+}
+
+var cloneBundle = function(filePath, direction, options) {
+	try {
+		var root = mimic.findRoot(filePath);
+		if(options.verbose) { console.log("   Load: " + root); }
+		
+		// Test if under mimic management
+		if(root === undefined || root === null) {	// Not initialized
+			return;
+		}
+
+		// Load bundle list	
+		var bundleList = bundle.load(root);
+				
+		// Make an array from the bundle list
+		var bundleArray = new Array();
+		var keys = Object.keys(bundleList);
+		for(var i = 0; i < keys.length; i++) {
+			var rec = bundleList[keys[i]];
+			bundleArray.push(rec);
+		}
+		
+		// if(bundleArray.length == 0) return;
+
+		// Use for() on keys to do task in series.
+		for(var i = 0; i < bundleArray.length; i++) {
+			var rec = bundleArray[i];
+			if(options.verbose) { console.log('  Clone: ' + rec.path); }
+			var collectionPath = path.join(filePath, rec.path);
+
+			// Initialize folder
+			if(options.verbose) { console.log("   Init: " + collectionPath); }
+			if( ! mimic.init(collectionPath) ) continue;	// Already initialize
+				
+			// Write configuration information
+			var uri = options.uri + "/" + rec.path;
+			var info = {};
+				
+			info["Pull"] = {};
+
+			if( options.tag ) {  info[direction]['tag'] = options.tag;  }
+			if( options.username ) {  info[direction]['username'] = options.username;  }
+			if( options.uri ) { info[direction]['uri'] = uri;  }
+			if( options.cipher ) { info[direction]['withCipher'] = options.cipher;  }
+			if( options.key ) { info[direction]['keyFile'] = options.key;  }
+				
+			config.store(collectionPath, info);
+				
+			// Create clone
+			mimic.pull(collectionPath, uri, options.username, options.keyfile, options.verbose)
+			.then(function(result) {
+				cloneBundle(collectionPath, direction, options);
+			}
+			);
+		}
+	} catch(reason) {
+		console.log(reason.message);
+		if(options.verbose) { console.log(reason); }
+	}
+}
+
+var refresh = async function(root, bundleArray, options) {
+	// Use for() on keys to do task in series.
+	for(var i = 0; i < bundleArray.length; i++) {
+		var rec = bundleArray[i];
+		var srcPath = path.join(root, rec.path);
+		if(options.verbose) { console.log('Refresh: ' + srcPath); }
+		if(mimic.getRoot(rec.path) != null) {	// Folder is root for a mimic collection
+			await mimic.refresh(srcPath, options.quick, true, options.verbose, options.test);
+			// Load bundle list (if it exists)	
+			var bundleList = bundle.load(srcPath);
+			if(bundleList.length != 0) {
+				var subBundleArray = [];
+				var keys = Object.keys(bundleList);
+				for(var i = 0; i < keys.length; i++) {
+					var rec = bundleList[keys[i]];
+					subBundleArray.push(rec);
+				}
+				refresh(srcPath, subBundleArray, options);
+			}			
+		}
+	}
+}
+
+var pull = async function(root, bundleArray, options) {
+	// Use for() on keys to do task in series.
+	for(var i = 0; i < bundleArray.length; i++) {
+		var rec = bundleArray[i];
+		var srcPath = path.join(root, rec.path);
+		if(options.verbose) { console.log('   Pull: ' + srcPath); }
+		if(mimic.getRoot(srcPath) != null) {	// Folder is root for a mimic collection
+			await mimic.syncPull(srcPath, options.verbose);
+			// Load bundle list (if it exists)	
+			var bundleList = bundle.load(srcPath);
+			if(bundleList.length != 0) {
+				var subBundleArray = [];
+				var keys = Object.keys(bundleList);
+				for(var i = 0; i < keys.length; i++) {
+					var rec = bundleList[keys[i]];
+					subBundleArray.push(rec);
+				}
+				pull(srcPath, subBundleArray, options);
+			}
+		}
+	}
+}
+
+
+var add = async function(root, bundleArray, options) {
+	// Use for() on keys to do task in series.
+	for(var i = 0; i < bundleArray.length; i++) {
+		var rec = bundleArray[i];
+		var srcPath = path.join(root, rec.path);
+		if(options.verbose) { console.log('    Add: ' + srcPath); }
+		if(mimic.getRoot(srcPath) != null) {	// Folder is root for a mimic collection
+			await mimic.add(srcPath, true, options.verbose, options.test);
+			// Load bundle list (if it exists)	
+			var bundleList = bundle.load(srcPath);
+			if(bundleList.length != 0) {
+				var subBundleArray = [];
+				var keys = Object.keys(bundleList);
+				for(var i = 0; i < keys.length; i++) {
+					var rec = bundleList[keys[i]];
+					subBundleArray.push(rec);
+				}
+				add(srcPath, subBundleArray, options);
+			}
+		}
+	}
 }
 
 main(args);
