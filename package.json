@@ -31,6 +31,7 @@
   "dependencies": {
     "comma-number": "^2.0.0",
     "convert-units": "^2.3.4",
+    "expose-gc": "^1.0.0",
     "ftp": "^0.3.10",
     "graceful-fs": "^4.1.11",
     "n-readlines": "^0.2.8",

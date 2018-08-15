@@ -18,7 +18,7 @@ const mimic = require('./lib/mimic.js');
 
 // Configure the app
 var options  = yargs
-	.version('1.0.0')
+	.version('1.0.1')
 	.usage('Manage bundles of Mimic collection.')
 	.usage('mimic-bundle [args] files')
 	.example('mimic-bundle -a example', 'add the collection "example" to the bundle')
@@ -426,7 +426,12 @@ var refresh = async function(root, bundleArray, options) {
 		var srcPath = path.join(root, rec.path);
 		if(options.verbose) { console.log('Refresh: ' + srcPath); }
 		if(mimic.getRoot(rec.path) != null) {	// Folder is root for a mimic collection
-			await mimic.refresh(srcPath, options.quick, true, options.verbose, options.test);
+			try {
+				mimic.refresh(srcPath, options.quick, true, options.verbose, options.test);
+			} catch(reason) {
+				console.log(reason.message);
+				if(options.verbose) { console.log(reason); }
+			}
 			// Load bundle list (if it exists)	
 			var bundleList = bundle.load(srcPath);
 			if(bundleList.length != 0) {
@@ -449,7 +454,13 @@ var pull = async function(root, bundleArray, options) {
 		var srcPath = path.join(root, rec.path);
 		if(options.verbose) { console.log('   Pull: ' + srcPath); }
 		if(mimic.getRoot(srcPath) != null) {	// Folder is root for a mimic collection
-			await mimic.syncPull(srcPath, options.verbose);
+			try {
+				mimic.syncPull(srcPath, options.verbose);
+			} catch(reason) {
+				console.log(reason.message);
+				if(options.verbose) { console.log(reason); }
+			}
+				
 			// Load bundle list (if it exists)	
 			var bundleList = bundle.load(srcPath);
 			if(bundleList.length != 0) {
@@ -473,7 +484,12 @@ var add = async function(root, bundleArray, options) {
 		var srcPath = path.join(root, rec.path);
 		if(options.verbose) { console.log('    Add: ' + srcPath); }
 		if(mimic.getRoot(srcPath) != null) {	// Folder is root for a mimic collection
-			await mimic.add(srcPath, true, options.verbose, options.test);
+			try {
+				mimic.add(srcPath, true, options.verbose, options.test);
+			} catch(reason) {
+				console.log(reason.message);
+				if(options.verbose) { console.log(reason); }
+			}
 			// Load bundle list (if it exists)	
 			var bundleList = bundle.load(srcPath);
 			if(bundleList.length != 0) {

@@ -63,6 +63,7 @@ test/clone-test
 test/download-test
 test/prune-test
 test/pull-test
+test/pull-test-2
 test/refresh-test
 test/bundle-test
 test/bundle-test-2

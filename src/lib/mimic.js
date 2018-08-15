@@ -17,6 +17,8 @@ const walk = require('walk-folder-tree');
 const convert = require('convert-units');
 const commaNumber = require('comma-number');
 
+require('expose-gc');
+
 // Mimic configuration information
 const config = require('./config.js');
 const checksum = require('./checksum.js');
@@ -31,6 +33,8 @@ var	Username = "";
 var	FileCnt = 0;
 var	TotalSize = 0;
 var RemovedCnt = 0;
+
+var GCInterval = 1000;	// How many file operations between garbage collection
 
 //Public interface
 module.exports = {	
@@ -177,6 +181,14 @@ module.exports = {
             }
 		}
 	},
+
+	forceGC : function() {
+		if (global.gc) {
+			global.gc();
+		} else {
+			console.warn('No garbage collection (GC) hook! Unable to do garbage collection. Start your program as `node --expose-gc file.js`.');
+		}
+	},
 	
 	/** 
 	Remove file associated with a checksum record.
@@ -202,6 +214,8 @@ module.exports = {
 	},
 
 	pullFromScp : function(checksumRec, outPathname) {
+		var self = module.exports;
+
 		return new Promise(function(resolve, reject) {
 			if( checksum.isDir(checksumRec.checksum) ) { resolve(checksumRec.path); }
 			if( typeof outPathname != 'string' ) { outPathname = checksumRec.path; }
@@ -221,6 +235,7 @@ module.exports = {
 						FileCnt++; 
 						TotalSize += length; 
 					}
+					if( FileCnt > 1 && (FileCnt % GCInterval) == 0) { self.forceGC(); }	// Do garbage collection
 					resolve(pathname);
 				}
 			);
@@ -228,6 +243,8 @@ module.exports = {
 	},
 
 	pullFromHttps : function(checksumRec, outPathname) {
+		var self = module.exports;
+
 		// Copy checksum file
 		return new Promise(function(resolve, reject) {
 			if( checksum.isDir(checksumRec.checksum) ) { resolve(checksumRec.path); }
@@ -254,6 +271,7 @@ module.exports = {
 						FileCnt++; 
 						TotalSize += length; 
 					}
+					if( FileCnt > 1 && (FileCnt % GCInterval) == 0) { self.forceGC(); }	// Do garbage collection
 					resolve(pathname);
 				}
 			);
@@ -261,6 +279,8 @@ module.exports = {
 	},
 
 	pullFromFtp : function (checksumRec, outPathname) {
+		var self = module.exports;
+
 		return new Promise(function(resolve, reject) {
 			if( checksum.isDir(checksumRec.checksum) ) { resolve(checksumRec.path); }
 			if( typeof outPathname != 'string' ) { outPathname = checksumRec.path; }
@@ -281,6 +301,7 @@ module.exports = {
 						FileCnt++; 
 						TotalSize += length; 
 					}
+					if( FileCnt > 1 && (FileCnt % GCInterval) == 0) { self.forceGC(); }	// Do garbage collection
 					resolve(pathname);
 				}
 			);
