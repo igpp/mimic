@@ -18,7 +18,7 @@ const mimic = require('./lib/mimic.js');
 
 // Configure the app
 var options  = yargs
-	.version('1.0.1')
+	.version('1.0.2')
 	.usage('Manage bundles of Mimic collection.')
 	.usage('mimic-bundle [args] files')
 	.example('mimic-bundle -a example', 'add the collection "example" to the bundle')
@@ -409,6 +409,7 @@ var cloneBundle = function(filePath, direction, options) {
 			// Create clone
 			mimic.pull(collectionPath, uri, options.username, options.keyfile, options.verbose)
 			.then(function(result) {
+				mimic.forceGC();	// Do garbage collection
 				cloneBundle(collectionPath, direction, options);
 			}
 			);
@@ -428,6 +429,7 @@ var refresh = async function(root, bundleArray, options) {
 		if(mimic.getRoot(rec.path) != null) {	// Folder is root for a mimic collection
 			try {
 				mimic.refresh(srcPath, options.quick, true, options.verbose, options.test);
+				mimic.forceGC();	// Do garbage collection
 			} catch(reason) {
 				console.log(reason.message);
 				if(options.verbose) { console.log(reason); }
@@ -456,6 +458,7 @@ var pull = async function(root, bundleArray, options) {
 		if(mimic.getRoot(srcPath) != null) {	// Folder is root for a mimic collection
 			try {
 				mimic.syncPull(srcPath, options.verbose);
+				mimic.forceGC();	// Do garbage collection
 			} catch(reason) {
 				console.log(reason.message);
 				if(options.verbose) { console.log(reason); }
@@ -486,6 +489,7 @@ var add = async function(root, bundleArray, options) {
 		if(mimic.getRoot(srcPath) != null) {	// Folder is root for a mimic collection
 			try {
 				mimic.add(srcPath, true, options.verbose, options.test);
+				mimic.forceGC();	// Do garbage collection
 			} catch(reason) {
 				console.log(reason.message);
 				if(options.verbose) { console.log(reason); }
